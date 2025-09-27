@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 import config from '@/config'
-import * as enums from '@/constants/enums'
+import * as enums from '@/constants/enum'
 import isEmpty from 'is-empty'
 import { User } from '@/models'
 import Transport from 'nodemailer-brevo-transport'

@@ -2,7 +2,7 @@ import { User, HealthProfile, EmergencyAlert } from '@/models'
 import { HealthSafetyValidator, logHealthRecommendation } from '@/utils/healthSafety'
 import { encryptHealthData, decryptHealthData } from '@/security/crypto'
 import { logAuthEvent } from '@/security/security'
-import * as enums from '@/constants/enums'
+import * as enums from '@/constants/enum'
 import isEmpty from 'is-empty'
 
 export const userInfo = async (req, res) => {

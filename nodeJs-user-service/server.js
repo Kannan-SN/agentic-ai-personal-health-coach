@@ -1,4 +1,3 @@
-/* Package Imports */
 import http from 'http'
 import express from 'express'
 import { json, urlencoded } from 'body-parser'
@@ -154,8 +153,6 @@ connectDatabase((isConnect) => {
         server.listen(config.PORT, () => {
             console.log(`\x1b[33m[WELLNESS-SERVICE] Server running on port ${config.PORT}...`)
             console.log(`\x1b[38;5;201m[WELLNESS-SERVICE] API HOST - http://${serverIP}:${config.PORT} or ${config.USER_HOST}`)
-            console.log(`\x1b[36m[WELLNESS-SERVICE] Health disclaimers available at /api/health-disclaimer`)
-            console.log(`\x1b[91m[WELLNESS-SERVICE] REMEMBER: Always prioritize user safety and professional consultation \n`)
         })
     }
 })

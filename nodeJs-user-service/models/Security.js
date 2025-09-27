@@ -1,6 +1,6 @@
 
 import mongoose from 'mongoose'
-import * as enums from '@/constants/enums'
+import * as enums from '@/constants/enum'
 
 const SecuritySchema = new mongoose.Schema(
     {

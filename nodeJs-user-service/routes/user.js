@@ -1,5 +1,5 @@
 import express from 'express'
-import * as userValidation from '@/validations/user'
+import * as userValidation from '@/validation/user'
 import * as userController from '@/controllers/user'
 import * as wellnessController from '@/controllers/wellness'
 import { userAuthenticate, requireHealthAccess } from '@/security/passport'

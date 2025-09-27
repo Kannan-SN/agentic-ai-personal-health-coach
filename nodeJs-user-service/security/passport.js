@@ -1,6 +1,6 @@
 import { verifyJWTToken, logAuthEvent } from '@/security/security'
 import { Token, User } from '@/models'
-import * as enums from '@/constants/enums'
+import * as enums from '@/constants/enum'
 
 export const userAuthenticate = async (req, res, next) => {
     try {

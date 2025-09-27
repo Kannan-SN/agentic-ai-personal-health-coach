@@ -2,7 +2,7 @@ import { WellnessPlan, HealthProfile, User, ProgressTracking, EmergencyAlert } f
 import { HealthSafetyValidator, logHealthRecommendation } from '@/utils/healthSafety'
 import { logAuthEvent } from '@/security/security'
 import * as agentService from '@/services/agent'
-import * as enums from '@/constants/enums'
+import * as enums from '@/constants/enum'
 import isEmpty from 'is-empty'
 import config from '@/config'
 

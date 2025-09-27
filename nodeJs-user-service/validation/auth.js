@@ -3,6 +3,7 @@ import * as regex from '@/constants/regex'
 import yupToFormError from '@/utils/yupToFormErrors'
 
 
+
 const passwordSchema = yup.string()
     .required('Password is required')
     .min(8, 'Password must be at least 8 characters')

@@ -2,7 +2,7 @@ import { S3Client,DeleteObjectCommand } from '@aws-sdk/client-s3'
 import multer from 'multer'
 import multerS3 from 'multer-s3'
 import config from '@/config'
-import * as enums from '@/constants/enums'
+import * as enums from '@/'
 
 const s3Client = new S3Client({
     region: config.AWS_S3_REGION,

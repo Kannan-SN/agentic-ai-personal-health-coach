@@ -1,4 +1,4 @@
-import * as enums from '@/constants/enums'
+import * as enums from '@/constants/enum'
 
 export class HealthSafetyValidator {
     

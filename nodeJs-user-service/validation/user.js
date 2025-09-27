@@ -1,6 +1,6 @@
 import * as yup from 'yup'
 import * as regex from '@/constants/regex'
-import * as enums from '@/constants/enums'
+import * as enums from '@/constants/enum'
 import yupToFormError from '@/utils/yupToFormErrors'
 
 

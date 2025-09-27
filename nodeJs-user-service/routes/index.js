@@ -2,7 +2,7 @@ import express from 'express'
 import authRouter from './auth'
 import userRouter from './user'
 import internalRouter from './internal'
-import healthRouter from './health'
+// import healthRouter from './'
 
 const router = express.Router()
 
@@ -16,7 +16,7 @@ router.use('/user', userRouter)
 router.use('/internal', internalRouter)
 
 // Health-specific public routes
-router.use('/health', healthRouter)
+// router.use('/health', healthRouter)
 
 
 router.get('/health-disclaimer', (req, res) => {

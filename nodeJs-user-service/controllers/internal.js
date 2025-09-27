@@ -1,7 +1,7 @@
 import { WellnessPlan, User, EmergencyAlert } from '@/models'
 import { sendEmergencyAlert, sendWellnessPlanNotification } from '@/services/mail'
 import { logAuthEvent } from '@/security/security'
-import * as enums from '@/constants/enums'
+import * as enums from '@/constants/enum'
 
 export const syncHealthPlanUpdate = async (req, res) => {
     try {

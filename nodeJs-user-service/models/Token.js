@@ -1,3 +1,5 @@
+import mongoose from "mongoose"
+
 const TokenSchema = new mongoose.Schema(
     {
         userId: {

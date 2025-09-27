@@ -50,7 +50,7 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Health-specific colors
+        // Health-specific colors (add these after shadcn setup)
         health: {
           primary: '#10b981',
           secondary: '#06b6d4', 
@@ -84,20 +84,12 @@ module.exports = {
         "pulse-emergency": {
           "0%, 100%": { opacity: 1 },
           "50%": { opacity: 0.5 },
-        },
-        "fade-in": {
-          "0%": { opacity: 0 },
-          "100%": { opacity: 1 },
         }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "pulse-emergency": "pulse-emergency 1s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "fade-in": "fade-in 0.5s ease-in-out"
-      },
-      fontFamily: {
-        'medical': ['Inter', 'system-ui', 'sans-serif']
+        "pulse-emergency": "pulse-emergency 1s cubic-bezier(0.4, 0, 0.6, 1) infinite"
       }
     },
   },

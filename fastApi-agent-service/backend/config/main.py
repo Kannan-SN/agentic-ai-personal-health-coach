@@ -18,8 +18,8 @@ PORT = config.get("PORT", default=5000, cast=int)
 
 GEMINI_API_KEY = config.get("GEMINI_API_KEY", cast=str)
 
-NUTRITIONIX_APP_ID = config.get("NUTRITIONIX_APP_ID", cast=str)
-NUTRITIONIX_API_KEY = config.get("NUTRITIONIX_API_KEY", cast=str)
+# NUTRITIONIX_APP_ID = config.get("NUTRITIONIX_APP_ID", cast=str)
+# NUTRITIONIX_API_KEY = config.get("NUTRITIONIX_API_KEY", cast=str)
 
 __access_public_key_path = os.path.join(
     os.path.dirname(__file__), "../private/auth_public_key.pem"

@@ -17,7 +17,7 @@ class HealthPlanChat(BaseModel):
         if not v:
             raise ValueError("Message cannot be empty")
         
-        
+        # Emergency medical situations
         emergency_patterns = [
             'chest pain', 'heart attack', 'stroke', 'can\'t breathe', 'breathing',
             'severe pain', 'bleeding heavily', 'unconscious', 'fainted',
@@ -27,10 +27,10 @@ class HealthPlanChat(BaseModel):
         message_lower = v.lower()
         for pattern in emergency_patterns:
             if pattern in message_lower:
-                
+                # Flag for emergency response protocol
                 break
         
-        
+        # Medical concerns requiring professional consultation
         medical_concern_patterns = [
             'dizzy', 'nauseous', 'vomiting', 'severe fatigue', 'joint pain',
             'back pain', 'neck pain', 'headache severe', 'vision problems',
@@ -39,10 +39,10 @@ class HealthPlanChat(BaseModel):
         
         for pattern in medical_concern_patterns:
             if pattern in message_lower:
-                
+                # Flag for professional consultation recommendation
                 break
         
-        
+        # Unsafe exercise patterns
         unsafe_exercise_patterns = [
             'extreme workout', 'maximum intensity', 'no pain no gain',
             'until exhaustion', 'ignore pain', 'push through injury',
@@ -51,10 +51,10 @@ class HealthPlanChat(BaseModel):
         
         for pattern in unsafe_exercise_patterns:
             if pattern in message_lower:
-                
+                # Flag for safety education and guidance
                 break
         
-        
+        # Unsafe diet patterns
         unsafe_diet_patterns = [
             'crash diet', 'extreme diet', 'starvation', 'fasting extreme',
             'lose weight fast', 'diet pills', 'skip meals', 'very low calorie'
@@ -62,7 +62,7 @@ class HealthPlanChat(BaseModel):
         
         for pattern in unsafe_diet_patterns:
             if pattern in message_lower:
-                
+                # Flag for nutrition safety guidance
                 break
         
         return v
@@ -107,9 +107,9 @@ class UpdateHealthProgress(BaseModel):
         if v is None:
             return v
         
-        
+        # Flag rapid weight changes for safety review
         if abs(v) > 2.0:
-            
+            # Professional consultation may be recommended
             pass
         
         return v
@@ -121,7 +121,7 @@ class UpdateHealthProgress(BaseModel):
             return v
         
         if v <= 3:
-            
+            # Low energy may indicate overtraining or health issues
             pass
         
         return v
@@ -144,7 +144,7 @@ class UpdateHealthProgress(BaseModel):
             note_lower = note.lower() if note else ""
             for keyword in concerning_keywords:
                 if keyword in note_lower:
-                    
+                    # Flag for health review
                     break
         
         return v
@@ -167,7 +167,7 @@ class UpdateHealthProgress(BaseModel):
             concern_lower = concern.lower() if concern else ""
             for keyword in urgent_keywords:
                 if keyword in concern_lower:
-                    
+                    # Flag for urgent medical attention
                     break
         
         return v
@@ -187,14 +187,14 @@ class PauseHealthPlan(BaseModel):
         if not v or len(v.strip()) < 5:
             raise ValueError("Please provide a clear reason for pausing your health plan")
         
-       
+        # Health-related pause reasons
         health_keywords = [
             'injury', 'sick', 'illness', 'doctor', 'medical', 'surgery',
             'medication', 'health issue', 'not feeling well', 'tired',
             'exhausted', 'pain', 'recovery'
         ]
         
-        
+        # Life circumstance pause reasons
         life_keywords = [
             'busy', 'work', 'travel', 'family', 'schedule', 'time',
             'vacation', 'moving', 'stress', 'overwhelmed'
@@ -202,14 +202,14 @@ class PauseHealthPlan(BaseModel):
         
         reason_lower = v.lower()
         
-        
+        # Categorize health-related pauses
         if any(keyword in reason_lower for keyword in health_keywords):
-            
+            # Follow up with health guidance
             pass
         
-        
+        # Categorize life circumstance pauses
         elif any(keyword in reason_lower for keyword in life_keywords):
-            
+            # Offer flexible restart options
             pass
         
         return v
@@ -239,7 +239,7 @@ class ResumeHealthPlan(BaseModel):
         
         v_lower = v.lower()
         if any(keyword in v_lower for keyword in significant_change_keywords):
-            
+            # Medical review may be recommended before resuming
             pass
         
         return v
@@ -267,7 +267,7 @@ class HealthPlanFeedback(BaseModel):
     def validate_workout_difficulty_safety(cls, v):
         """Flag if workouts are too difficult (safety concern)"""
         if v >= 4:
-            
+            # May need plan modifications for safety
             pass
         return v
     
@@ -285,7 +285,7 @@ class HealthPlanFeedback(BaseModel):
         v_lower = v.lower()
         for keyword in safety_concern_keywords:
             if keyword in v_lower:
-                
+                # Flag for safety review and follow-up
                 break
         
         return v
@@ -294,7 +294,7 @@ class HealthDataExport(BaseModel):
     """
     Validation for health data export requests
     """
-    export_format: str = Field(..., regex="^(json|csv|pdf)$", description="Export format")
+    export_format: str = Field(..., pattern="^(json|csv|pdf)$", description="Export format")
     include_progress_data: bool = Field(default=True, description="Include progress tracking data")
     include_meal_plans: bool = Field(default=True, description="Include meal plan data")
     include_workout_plans: bool = Field(default=True, description="Include workout plan data")
@@ -313,7 +313,7 @@ class EmergencyContact(BaseModel):
     """
     contact_name: str = Field(..., min_length=2, max_length=100, description="Emergency contact name")
     relationship: str = Field(..., min_length=2, max_length=50, description="Relationship to user")
-    phone_number: str = Field(..., regex="^[+]?[0-9\s\-\(\)]{10,20}$", description="Phone number")
+    phone_number: str = Field(..., pattern="^[+]?[0-9\s\-\(\)]{10,20}$", description="Phone number")
     should_notify_concerns: bool = Field(
         default=False, 
         description="Whether to notify contact of health concerns"

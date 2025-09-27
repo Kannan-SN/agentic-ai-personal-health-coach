@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, validator, model_validator
 from typing import List, Optional
 from beanie import PydanticObjectId
 from backend.constants.enums import ActivityLevel, Goal, DietaryRestriction, WorkoutType
@@ -10,12 +10,12 @@ class CreateHealthPlan(BaseModel):
     user_id: PydanticObjectId = Field(..., description="User ID from user service")
     plan_name: Optional[str] = Field(None, max_length=100, description="Custom plan name")
     
-    
+    # Basic health metrics
     age: int = Field(..., ge=13, le=100, description="Age in years (13-100 for safety)")
     current_activity_level: ActivityLevel = Field(..., description="Current physical activity level")
     primary_goal: Goal = Field(..., description="Primary health/fitness goal")
     
-    
+    # Time and availability
     time_availability_minutes: int = Field(
         ..., 
         ge=10, 
@@ -23,7 +23,7 @@ class CreateHealthPlan(BaseModel):
         description="Daily time available for workouts (10-180 minutes)"
     )
     
-   
+    # Preferences and restrictions
     preferred_workout_types: Optional[List[WorkoutType]] = Field(
         default=[], 
         description="Preferred types of workouts"
@@ -37,7 +37,7 @@ class CreateHealthPlan(BaseModel):
         description="Dietary restrictions or preferences"
     )
     
-   
+    # Health and safety information
     health_conditions: Optional[List[str]] = Field(
         default=[], 
         description="Self-reported health conditions"
@@ -55,7 +55,7 @@ class CreateHealthPlan(BaseModel):
         description="User must acknowledge health disclaimers"
     )
     
-    
+    # Additional user input
     user_input: Optional[str] = Field(
         None, 
         max_length=1000, 
@@ -68,10 +68,10 @@ class CreateHealthPlan(BaseModel):
         if v < 13:
             raise ValueError("Age below minimum safety threshold - parental supervision required")
         if v < 18:
-            
+            # Special considerations for minors
             pass
         if v > 75:
-            
+            # Special considerations for elderly users
             pass
         return v
 
@@ -90,7 +90,7 @@ class CreateHealthPlan(BaseModel):
         for condition in v:
             condition_lower = condition.lower()
             if any(keyword in condition_lower for keyword in high_risk_keywords):
-                
+                # Flag for professional consultation requirement
                 pass
         
         return v
@@ -101,45 +101,45 @@ class CreateHealthPlan(BaseModel):
         if not v:
             return v
         
-        
+        # Check for high-intensity workout types that require extra safety measures
         high_intensity_types = [WorkoutType.HIIT]
         
         if any(workout_type in high_intensity_types for workout_type in v):
-            
+            # Additional safety screening may be required
             pass
         
         return v
 
-    @root_validator
-    def validate_overall_safety_profile(cls, values):
+    @model_validator(mode='after')
+    def validate_overall_safety_profile(self):
         """Comprehensive safety validation across all fields"""
-        age = values.get('age')
-        activity_level = values.get('current_activity_level')
-        goal = values.get('primary_goal')
-        health_conditions = values.get('health_conditions', [])
-        medical_clearance = values.get('medical_clearance', False)
+        age = self.age
+        activity_level = self.current_activity_level
+        goal = self.primary_goal
+        health_conditions = self.health_conditions or []
+        medical_clearance = self.medical_clearance
         
-        
+        # Compile risk factors
         high_risk_factors = []
         
-        
+        # Age-related risk factors
         if age and (age < 18 or age > 65):
             high_risk_factors.append('age_consideration')
         
-        
+        # Activity level vs goal mismatch
         if activity_level == ActivityLevel.SEDENTARY and goal in [Goal.MUSCLE_GAIN]:
             high_risk_factors.append('sedentary_with_intensive_goal')
         
-        
+        # Existing health conditions
         if health_conditions:
             high_risk_factors.append('existing_health_conditions')
         
-        
+        # Check if medical clearance is required but not provided
         if high_risk_factors and not medical_clearance:
-            
+            # Professional consultation recommended
             pass
         
-        return values
+        return self
 
     @validator('user_input')
     def validate_user_input_content(cls, v):
@@ -155,7 +155,7 @@ class CreateHealthPlan(BaseModel):
         v_lower = v.lower()
         for phrase in concerning_phrases:
             if phrase in v_lower:
-                
+                # Flag concerning content for safety review
                 break
         
         return v
@@ -210,7 +210,7 @@ class UpdateHealthPlanProgress(BaseModel):
         for note in v:
             note_lower = note.lower()
             if any(keyword in note_lower for keyword in concerning_keywords):
-                
+                # Flag for immediate safety review
                 pass
         
         return v
@@ -219,7 +219,7 @@ class UpdateHealthPlanProgress(BaseModel):
     def validate_energy_concerns(cls, v):
         """Flag very low energy levels for safety review"""
         if v and v <= 2:
-            
+            # Very low energy may indicate overtraining or health issues
             pass
         return v
     
@@ -237,7 +237,7 @@ class UpdateHealthPlanProgress(BaseModel):
         for issue in v:
             issue_lower = issue.lower()
             if any(keyword in issue_lower for keyword in urgent_keywords):
-                
+                # Flag for urgent medical attention
                 pass
         
         return v
@@ -273,7 +273,7 @@ class PauseHealthPlan(BaseModel):
         
         v_lower = v.lower()
         if any(keyword in v_lower for keyword in health_related_keywords):
-            
+            # Flag as health-related pause requiring follow-up
             pass
         
         return v
@@ -306,7 +306,7 @@ class ChatHealthPlan(BaseModel):
         
         v_lower = v.lower()
         if any(keyword in v_lower for keyword in emergency_keywords):
-            
+            # Flag for emergency response protocol
             pass
         
         return v

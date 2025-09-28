@@ -30,9 +30,11 @@ HMAC_AGENT_KEY = config.get("HMAC_AGENT_KEY", cast=str)
 HMAC_USER_KEY = config.get("HMAC_USER_KEY", cast=str)
 
 
-API_HOST = config.get("API_HOST", cast=str)
+AGENT_HOST = config.get("AGENT_HOST", cast=str)
 USER_HOST = config.get("USER_HOST", cast=str)
-FRONT_HOST = config.get("FRONT_HOST", cast=str)
+FRONT_HOST = config.get("FRONTEND_HOST", cast=str)
+
+
 
 HEALTH_DATA_RETENTION_DAYS = config.get("HEALTH_DATA_RETENTION_DAYS", default=365, cast=int)
 MAX_WORKOUT_DURATION_MINUTES = config.get("MAX_WORKOUT_DURATION_MINUTES", default=180, cast=int)

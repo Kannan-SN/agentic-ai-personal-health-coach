@@ -99,5 +99,6 @@ SecuritySchema.pre('save', function(next) {
     next()
 })
 
-export const Security = mongoose.model('security', SecuritySchema, 'security')
+const Security = mongoose.model('security', SecuritySchema, 'security')
+export default Security
 

@@ -11,12 +11,12 @@ const config = {
     AGENT_HOST: process.env.AGENT_HOST,
     FRONTEND_HOST: process.env.FRONTEND_HOST,
 
-    SMTP_MAIL: process.env.MAIL,
-    SMTP_HOST: process.env.HOST,
-    SMTP_PORT: process.env.MAILPORT,
-    SMTP_SECURE: process.env.SECURE,
-    SMTP_USER: process.env.USER_NAME,
-    SMTP_PASS: process.env.PASSWORD,
+    MAIL: process.env.MAIL,
+    HOST: process.env.HOST,
+    MAILPORT: process.env.MAILPORT,
+    SECURE: process.env.SECURE,
+    USER_NAME: process.env.USER_NAME,
+    PASSWORD: process.env.PASSWORD,
 
     
     REQUEST_TIMEOUT: 10000, 

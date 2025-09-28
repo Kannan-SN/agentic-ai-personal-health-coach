@@ -1,25 +1,44 @@
-import nodemailer from 'nodemailer'
+// Fix the import - use require instead of import for nodemailer
+const nodemailer = require('nodemailer')
 import config from '@/config'
 import * as enums from '@/constants/enum'
 import isEmpty from 'is-empty'
 import { User } from '@/models'
-import Transport from 'nodemailer-brevo-transport'
-
 
 const createEmailTransport = () => {
     try {
-        const transport = nodemailer.createTransporter(new Transport({ 
-            apiKey: config.SMTP_PASS,
+        const transport = nodemailer.createTransport({
+            service: 'gmail',
+            host: config.HOST || 'smtp.gmail.com',
+            port: parseInt(config.MAILPORT) || 587,
+            secure: config.MAILPORT === '465', // true for 465, false for other ports
+            auth: {
+                user: config.USER_NAME,
+                pass: config.PASSWORD // Gmail App Password (not your Gmail password)
+            },
+            tls: {
+                rejectUnauthorized: false // For development only
+            },
             timeout: 30000,
             maxConnections: 5,
             maxMessages: 100
-        }))
-        
-        console.log('[WELLNESS-MAIL] Email transport created successfully')
+        })
+
+        console.log('[WELLNESS-MAIL] Gmail transport created successfully')
+
+        // Verify connection
+        transport.verify((error, success) => {
+            if (error) {
+                console.error('[WELLNESS-MAIL] Gmail connection verification failed:', error)
+            } else {
+                console.log('[WELLNESS-MAIL] Gmail server is ready to take our messages')
+            }
+        })
+
         return transport
     } catch (error) {
-        console.error('[WELLNESS-MAIL] Failed to create email transport:', error)
-        throw new Error('Email service configuration failed')
+        console.error('[WELLNESS-MAIL] Failed to create Gmail transport:', error)
+        throw new Error('Gmail service configuration failed')
     }
 }
 
@@ -42,7 +61,7 @@ const sendEmail = async (toEmail, content, options = {}) => {
         const mailOptions = {
             from: {
                 name: 'Wellness Coach',
-                address: config.SMTP_MAIL
+                address: config.USER_NAME // Use your Gmail address
             },
             to: toEmail,
             bcc: bcc,
@@ -50,16 +69,12 @@ const sendEmail = async (toEmail, content, options = {}) => {
             html: template,
             attachments: attachments,
             headers: headers,
-            priority: priority,
-            trackingSettings: {
-                clickTracking: { enable: false },
-                openTracking: { enable: false }   
-            }
+            priority: priority
         }
 
         const mailSentInformation = await transport.sendMail(mailOptions)
         
-        console.log(`[WELLNESS-MAIL] Email sent successfully:`, {
+        console.log(`[WELLNESS-MAIL] Email sent successfully via Gmail:`, {
             messageId: mailSentInformation.messageId,
             accepted: mailSentInformation.accepted?.length || 0,
             rejected: mailSentInformation.rejected?.length || 0,
@@ -75,7 +90,7 @@ const sendEmail = async (toEmail, content, options = {}) => {
         }
         
     } catch (error) {
-        console.error('[WELLNESS-MAIL] Error sending email:', {
+        console.error('[WELLNESS-MAIL] Error sending email via Gmail:', {
             error: error.message,
             to: toEmail,
             code: error.code || 'UNKNOWN'
@@ -90,7 +105,6 @@ const sendEmail = async (toEmail, content, options = {}) => {
 
 export const sendEmailViaTemplate = async ({ identifier, to, content, bcc, options = {} }) => {
     try {
-       
         const templates = {
             [enums.EMAIL_CATEGORIES.VERIFICATION_MAIL]: {
                 subject: 'Welcome to Wellness Coach - Please Verify Your Email',
@@ -143,7 +157,7 @@ export const sendEmailViaTemplate = async ({ identifier, to, content, bcc, optio
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
                         <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                             <h1 style="color: #28a745; text-align: center; margin-bottom: 30px;">
-                                Your Wellness Plan is Ready! 🌟
+                                Your Wellness Plan is Ready!
                             </h1>
                             <p style="font-size: 16px; line-height: 1.6; color: #333;">
                                 Hello ##NAME##,
@@ -193,7 +207,7 @@ export const sendEmailViaTemplate = async ({ identifier, to, content, bcc, optio
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa;">
                         <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-top: 5px solid #dc3545;">
                             <h1 style="color: #dc3545; text-align: center; margin-bottom: 30px;">
-                                ⚠️ Health Safety Alert
+                                Health Safety Alert
                             </h1>
                             <p style="font-size: 16px; line-height: 1.6; color: #333;">
                                 Hello ##NAME##,
@@ -239,7 +253,7 @@ export const sendEmailViaTemplate = async ({ identifier, to, content, bcc, optio
             return false
         }
 
-       
+        // Process template with replacements
         let processedTemplate = template.template
         let processedSubject = template.subject
 
@@ -255,13 +269,11 @@ export const sendEmailViaTemplate = async ({ identifier, to, content, bcc, optio
             '##HEALTH_DISCLAIMER##': content.healthDisclaimer || enums.HEALTH_DISCLAIMER
         }
 
-        
         Object.entries(replacements).forEach(([placeholder, value]) => {
             processedTemplate = processedTemplate.replace(new RegExp(placeholder, 'g'), value)
             processedSubject = processedSubject.replace(new RegExp(placeholder, 'g'), value)
         })
 
-        
         const emailResult = await sendEmail(
             to,
             {
@@ -274,7 +286,7 @@ export const sendEmailViaTemplate = async ({ identifier, to, content, bcc, optio
         )
 
         if (emailResult.success) {
-            console.log(`[WELLNESS-MAIL] Template email sent successfully: ${identifier}`)
+            console.log(`[WELLNESS-MAIL] Template email sent successfully via Gmail: ${identifier}`)
             return true
         } else {
             console.error(`[WELLNESS-MAIL] Template email failed: ${identifier}`, emailResult.error)
@@ -286,7 +298,6 @@ export const sendEmailViaTemplate = async ({ identifier, to, content, bcc, optio
         return false
     }
 }
-
 
 export const sendEmergencyAlert = async (userEmail, userName, alertData) => {
     try {
@@ -310,7 +321,6 @@ export const sendEmergencyAlert = async (userEmail, userName, alertData) => {
     }
 }
 
-
 export const sendWellnessPlanNotification = async (userEmail, userName, planData) => {
     try {
         const planContent = {
@@ -329,6 +339,19 @@ export const sendWellnessPlanNotification = async (userEmail, userName, planData
         })
     } catch (error) {
         console.error('[WELLNESS-MAIL] Wellness plan notification failed:', error)
+        return false
+    }
+}
+
+// Test function to verify Gmail setup
+export const testGmailConnection = async () => {
+    try {
+        const transport = createEmailTransport()
+        await transport.verify()
+        console.log('[WELLNESS-MAIL] Gmail connection test successful')
+        return true
+    } catch (error) {
+        console.error('[WELLNESS-MAIL] Gmail connection test failed:', error)
         return false
     }
 }

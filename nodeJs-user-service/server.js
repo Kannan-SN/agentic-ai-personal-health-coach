@@ -63,10 +63,13 @@ app.use('/api/user/health', healthDataLimiter)
 app.use('/api/user/wellness', healthDataLimiter)
 app.use(generalLimiter)
 
+console.log('config.FRONTEND_HOST: ', config.FRONTEND_HOST);
+console.log('config.AGENT_HOST: ', config.AGENT_HOST);
 
 app.use(
     cors({
-        origin: [config.AGENT_HOST, config.FRONTEND_HOST],
+        
+        origin: [ config.FRONTEND_HOST,config.AGENT_HOST], // Use specific origin instead of '*'
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         allowedHeaders: [

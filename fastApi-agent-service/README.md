@@ -2,7 +2,6 @@
 
 An AI-powered personal health and wellness coaching service that provides personalized workout plans and meal suggestions with comprehensive safety measures and professional consultation recommendations.
 
-## ⚠️ Important Health Disclaimer
 
 **This AI service provides general wellness information only and cannot replace professional medical advice.** Always consult with qualified healthcare providers, registered dietitians, or certified fitness professionals before starting any new diet or exercise program, especially if you have pre-existing health conditions, are pregnant, or are taking medications.
 
@@ -107,10 +106,6 @@ HMAC_USER_KEY="your-secure-hmac-key"
 USER_HOST="http://localhost:5001"
 FRONT_HOST="http://localhost:3000"
 
-# Optional
-NUTRITIONIX_APP_ID="your-nutritionix-app-id"
-NUTRITIONIX_API_KEY="your-nutritionix-api-key"
-```
 
 ## API Documentation
 
@@ -154,7 +149,6 @@ The service is designed to complement, not replace, professional healthcare:
 - **Medical Clearance Tracking** - Monitors and requires professional approval for high-risk users
 - **Healthcare Provider Integration** - APIs for professional oversight and monitoring
 - **Progress Sharing** - Secure data export for professional consultations
-- **Emergency Escalation** - Automatic referral protocols for concerning symptoms
 
 ## Contributing
 
@@ -165,22 +159,8 @@ We welcome contributions that enhance safety and effectiveness:
 3. User testing must include healthcare professional oversight
 4. Code must pass security and privacy audits
 
-## Support & Emergency Resources
 
-- **Emergency Medical:** 911 (US)
-- **Poison Control:** 1-800-222-1222 (US)
-- **Crisis Text Line:** Text HOME to 741741
-- **Suicide Prevention:** 988 (US)
 
-## Professional Resources
-
-- **Find a Doctor:** [AMA Directory](https://www.ama-assn.org/go/freida)
-- **Find a Dietitian:** [Academy of Nutrition](https://www.eatright.org/find-a-nutrition-expert)
-- **Find Fitness Professional:** [ACSM Directory](https://www.acsm.org/get-stay-certified/find-a-certified-professional)
-
-## License
-
-MIT License - See [LICENSE](LICENSE) for details
 
 ## Disclaimer
 

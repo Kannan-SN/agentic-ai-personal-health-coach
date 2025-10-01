@@ -391,8 +391,11 @@ export const getWellnessPlans = async (req, res) => {
             .sort({ createdAt: -1 })
             .lean()
 
+        // FIXED: Transform _id to id for frontend compatibility
         const plansWithProgress = plans.map((plan) => ({
             ...plan,
+            id: plan._id.toString(),  // ✅ Add id field
+            _id: undefined,            // ✅ Remove _id to avoid confusion
             completion_percentage: Math.min((plan.currentWeek / plan.planDurationWeeks) * 100, 100),
             is_active: plan.status === enums.WELLNESS_PLAN_STATES.ACTIVE,
             requires_attention: plan.status === enums.WELLNESS_PLAN_STATES.REQUIRES_REVIEW,
@@ -422,13 +425,26 @@ export const getWellnessPlans = async (req, res) => {
 export const getWellnessPlanById = async (req, res) => {
     try {
         const { user, params } = req
+        const planId = params.planId
+        
+        // FIXED: Validate ID before querying
+        if (!planId || planId === 'undefined' || planId === 'null') {
+            console.error('[WELLNESS-PLAN] Invalid plan ID:', planId)
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid plan ID provided',
+            })
+        }
+
+        console.log('[WELLNESS-PLAN] Fetching plan:', planId)
 
         const plan = await WellnessPlan.findOne({
-            _id: params.planId,
+            _id: planId,
             userId: user._id,
         }).lean()
 
         if (!plan) {
+            console.log('[WELLNESS-PLAN] Plan not found:', planId)
             return res.status(404).json({
                 success: false,
                 message: 'Wellness plan not found',
@@ -436,20 +452,26 @@ export const getWellnessPlanById = async (req, res) => {
         }
 
         // Update last accessed time
-        await WellnessPlan.updateOne({ _id: params.planId }, { $set: { lastAccessedAt: new Date() } })
+        await WellnessPlan.updateOne(
+            { _id: planId }, 
+            { $set: { lastAccessedAt: new Date() } }
+        )
 
         // Calculate current progress
         const completionPercentage = Math.min((plan.currentWeek / plan.planDurationWeeks) * 100, 100)
         const requiresAttention = plan.emergencyFlags?.some((flag) => !flag.resolved && flag.severity === 'high')
 
+        // FIXED: Transform _id to id
         const response = {
             success: true,
             data: {
                 ...plan,
+                id: plan._id.toString(),  // ✅ Add id field
+                _id: undefined,            // ✅ Remove _id
                 completion_percentage: completionPercentage,
                 requires_attention: requiresAttention,
                 days_remaining: Math.max(0, plan.planDurationWeeks * 7 - (plan.currentWeek - 1) * 7),
-                safety_status: plan.healthAnalysis.risk_level || 'low',
+                safety_status: plan.healthAnalysis?.risk_level || 'low',
             },
             safety_reminders: [
                 'Follow the plan as designed and monitor how you feel',
@@ -474,7 +496,6 @@ export const getWellnessPlanById = async (req, res) => {
         })
     }
 }
-
 export const updatePlanProgress = async (req, res) => {
     try {
         const { user, params, body } = req

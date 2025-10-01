@@ -69,7 +69,7 @@ const Signout = () => {
         </Alert>
 
         {/* Emergency resources */}
-        <Card className="bg-red-50 border-red-200">
+        {/* <Card className="bg-red-50 border-red-200">
           <CardContent className="pt-4 text-center">
             <div className="flex items-center justify-center gap-2 text-red-700 mb-2">
               <Phone className="h-4 w-4" />
@@ -82,7 +82,7 @@ const Signout = () => {
               <div>Suicide Prevention: 988 (US)</div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   )

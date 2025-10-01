@@ -349,7 +349,6 @@ const ProgressTracking = () => {
             <li>• Report concerning symptoms to healthcare providers immediately</li>
             <li>• This tracking is for wellness monitoring only - not medical diagnosis</li>
             <li>• Seek professional medical attention for any health concerns</li>
-            <li>• Emergency services: 911 (US) | Crisis support: 741741</li>
           </ul>
         </CardContent>
       </Card>

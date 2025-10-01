@@ -138,7 +138,7 @@ const HealthDisclaimer = () => {
               <li>• Severe injury or bleeding</li>
               <li>• Any symptoms that feel life-threatening</li>
             </ul>
-            <div className="mt-4 p-3 bg-red-100 rounded-lg">
+            {/* <div className="mt-4 p-3 bg-red-100 rounded-lg">
               <p className="font-medium text-red-800">Emergency Resources:</p>
               <div className="mt-2 space-y-1 text-red-700">
                 <div>Emergency Services: 911 (US)</div>
@@ -146,7 +146,7 @@ const HealthDisclaimer = () => {
                 <div>Crisis Text Line: Text HOME to 741741</div>
                 <div>Suicide Prevention: 988 (US)</div>
               </div>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 

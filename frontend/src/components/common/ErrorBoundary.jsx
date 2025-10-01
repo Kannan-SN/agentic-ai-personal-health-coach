@@ -56,13 +56,13 @@ class ErrorBoundary extends React.Component {
               </CardContent>
             </Card>
 
-            <Alert className="border-red-500 bg-red-50">
+            {/* <Alert className="border-red-500 bg-red-50">
               <Phone className="h-4 w-4" />
               <AlertDescription className="text-sm">
                 <strong>Emergency Resources:</strong><br />
                 Emergency: 911 (US) | Crisis: 741741 | Suicide Prevention: 988
               </AlertDescription>
-            </Alert>
+            </Alert> */}
           </div>
         </div>
       )

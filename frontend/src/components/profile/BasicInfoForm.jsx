@@ -182,9 +182,9 @@ const BasicInfoForm = ({ initialData, onSubmit, loading, error }) => {
               {errors.age && (
                 <p className="text-sm text-red-600">{errors.age.message}</p>
               )}
-              {age && getAgeWarning(age) && (
+              {/* {age && getAgeWarning(age) && (
                 <p className="text-sm text-amber-600">{getAgeWarning(age)}</p>
-              )}
+              )} */}
             </div>
 
             <div className="space-y-2">

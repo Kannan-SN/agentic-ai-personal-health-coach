@@ -71,26 +71,11 @@ const DashboardLayout = ({ children }) => {
         })}
       </nav>
 
-      {/* Health Status Alert */}
-      {requiresProfessionalConsultation && (
-        <div className="p-4 border-t">
-          <Alert className="border-wellness-warning">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-xs">
-              Professional consultation recommended
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
+      
 
       {/* Emergency & Signout */}
       <div className="p-4 border-t space-y-2">
-        <Alert className="bg-red-50 border-red-200">
-          <Phone className="h-4 w-4" />
-          <AlertDescription className="text-xs text-red-600">
-            Emergency: 911 | Crisis: 741741
-          </AlertDescription>
-        </Alert>
+       
         <Button 
           variant="outline" 
           size="sm" 

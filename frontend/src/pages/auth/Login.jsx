@@ -119,13 +119,7 @@ const Login = () => {
         </p>
       </div>
 
-      <Alert className="bg-blue-50 border-blue-200">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription className="text-sm">
-          <strong>Important:</strong> This platform provides general wellness guidance only. 
-          Always consult healthcare professionals for medical advice.
-        </AlertDescription>
-      </Alert>
+      
     </div>
   )
 }

@@ -227,7 +227,7 @@ const HealthProfile = () => {
 
       {/* Profile Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="basic" className="flex items-center gap-2">
             <User className="h-4 w-4" />
             Basic Info
@@ -236,10 +236,10 @@ const HealthProfile = () => {
             <Heart className="h-4 w-4" />
             Health Conditions
           </TabsTrigger>
-          <TabsTrigger value="emergency" className="flex items-center gap-2">
+          {/* <TabsTrigger value="emergency" className="flex items-center gap-2">
             <Phone className="h-4 w-4" />
             Emergency Contacts
-          </TabsTrigger>
+          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="basic" className="space-y-4">
@@ -286,7 +286,7 @@ const HealthProfile = () => {
             <li>• Your health data is encrypted and securely stored</li>
           </ul>
           
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          {/* <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="font-medium text-red-800">Emergency Resources:</p>
             <div className="mt-2 space-y-1 text-red-700">
               <div>Emergency Services: 911 (US)</div>
@@ -294,7 +294,7 @@ const HealthProfile = () => {
               <div>Crisis Text Line: Text HOME to 741741</div>
               <div>Suicide Prevention: 988 (US)</div>
             </div>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>

@@ -2,87 +2,531 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS Custom Properties for shadcn/ui */
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 217 91% 60%;
+    --radius: 0.75rem;
+    
+    /* Wellness theme variables */
+    --wellness-primary-hsl: 217 91% 60%;
+    --wellness-secondary-hsl: 221 83% 53%;
+    --wellness-success-hsl: 142 76% 36%;
+    --wellness-warning-hsl: 43 96% 56%;
+    --wellness-danger-hsl: 0 84% 60%;
+    --wellness-text-hsl: 222 84% 5%;
+    --wellness-background-hsl: 210 40% 98%;
   }
+
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
 
+/* Base styles */
 @layer base {
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-wellness-background text-wellness-text font-normal;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold;
-  }
-  .health-disclaimer {
-    @apply text-sm text-wellness-danger font-medium;
-  }
-  .emergency-text {
-    @apply text-wellness-danger font-semibold;
-  }
-}
-
-
-
-@layer base {
-  * {
-    @apply border-border;
-  }
+  
   body {
     @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f8fafc;
+    color: #1f2937;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-wellness-primary ring-offset-2;
+  }
+
+  /* Typography improvements */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-wellness-text;
+    line-height: 1.2;
+  }
+
+  p {
+    line-height: 1.6;
+  }
+
+  /* Input and form improvements */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  textarea,
+  select {
+    @apply transition-all duration-200;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+  }
+}
+
+/* Wellness-specific component styles */
+@layer components {
+  /* Button variations */
+  .btn-primary {
+    @apply bg-wellness-primary hover:bg-wellness-secondary text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-wellness-primary focus:ring-offset-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-wellness-primary border border-wellness-primary font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-wellness-primary focus:ring-offset-2;
+  }
+
+  .btn-danger {
+    @apply bg-wellness-danger hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+
+  .btn-success {
+    @apply bg-wellness-success hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2;
+  }
+  
+  /* Card styles */
+  .wellness-card {
+    @apply bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  .wellness-card-header {
+    @apply p-6 pb-4 border-b border-gray-100;
+  }
+
+  .wellness-card-content {
+    @apply p-6;
+  }
+  
+  /* Form styles */
+  .form-group {
+    @apply space-y-2;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-wellness-primary focus:border-transparent transition-all duration-200;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-wellness-text mb-1;
+  }
+
+  .form-error {
+    @apply text-sm text-wellness-danger mt-1;
+  }
+
+  .form-help {
+    @apply text-sm text-gray-600 mt-1;
+  }
+  
+  /* Alert styles */
+  .alert-base {
+    @apply p-4 rounded-lg border;
+  }
+
+  .alert-success {
+    @apply alert-base bg-green-50 border-green-200 text-green-800;
+  }
+  
+  .alert-warning {
+    @apply alert-base bg-amber-50 border-amber-200 text-amber-800;
+  }
+  
+  .alert-danger {
+    @apply alert-base bg-red-50 border-red-200 text-red-800;
+  }
+
+  .alert-info {
+    @apply alert-base bg-blue-50 border-blue-200 text-blue-800;
+  }
+
+  /* Health-specific styles */
+  .health-disclaimer {
+    @apply bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-lg;
+  }
+
+  .emergency-alert {
+    @apply bg-red-50 border-2 border-red-500 text-red-800 p-4 rounded-lg font-medium;
+  }
+
+  .safety-warning {
+    @apply bg-orange-50 border border-orange-200 text-orange-800 p-3 rounded-lg text-sm;
+  }
+
+  /* Emergency button styling */
+  .emergency-button {
+    @apply bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-red-300 shadow-lg hover:shadow-xl;
+  }
+
+  /* Progress indicators */
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2;
+  }
+
+  .progress-fill {
+    @apply bg-wellness-primary h-2 rounded-full transition-all duration-300 ease-out;
+  }
+
+  /* Loading states */
+  .loading-skeleton {
+    @apply bg-gray-200 animate-pulse rounded;
+  }
+
+  .loading-spinner {
+    @apply animate-spin rounded-full border-2 border-gray-300 border-t-wellness-primary;
+  }
+
+  /* Chat interface styles */
+  .chat-message-user {
+    @apply bg-wellness-primary text-white rounded-lg px-4 py-2 max-w-xs ml-auto;
+  }
+
+  .chat-message-bot {
+    @apply bg-white border border-gray-200 rounded-lg px-4 py-2 max-w-xs mr-auto;
+  }
+
+  /* Navigation styles */
+  .nav-link {
+    @apply text-gray-600 hover:text-wellness-primary transition-colors duration-200 font-medium;
+  }
+
+  .nav-link-active {
+    @apply text-wellness-primary border-b-2 border-wellness-primary;
+  }
+
+  /* Badge styles */
+  .badge-primary {
+    @apply bg-wellness-primary text-white px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-success {
+    @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-warning {
+    @apply bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs font-medium;
+  }
+
+  .badge-danger {
+    @apply bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  /* Safe area utilities for mobile */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Touch utilities */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+
+  /* Text utilities */
+  .text-wellness-primary {
+    color: #3b82f6;
+  }
+
+  .text-wellness-success {
+    color: #10b981;
+  }
+
+  .text-wellness-warning {
+    color: #f59e0b;
+  }
+
+  .text-wellness-danger {
+    color: #ef4444;
+  }
+
+  /* Background utilities */
+  .bg-wellness-primary {
+    background-color: #3b82f6;
+  }
+
+  .bg-wellness-success {
+    background-color: #10b981;
+  }
+
+  .bg-wellness-warning {
+    background-color: #f59e0b;
+  }
+
+  .bg-wellness-danger {
+    background-color: #ef4444;
+  }
+
+  /* Border utilities */
+  .border-wellness-primary {
+    border-color: #3b82f6;
+  }
+
+  .border-wellness-success {
+    border-color: #10b981;
+  }
+
+  .border-wellness-warning {
+    border-color: #f59e0b;
+  }
+
+  .border-wellness-danger {
+    border-color: #ef4444;
+  }
+}
+
+/* Accessibility improvements */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.not-sr-only {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .btn-primary,
+  .btn-secondary,
+  .wellness-card {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mobile-first responsive adjustments */
+@media (max-width: 640px) {
+  .mobile-padding {
+    @apply px-4;
+  }
+  
+  .mobile-text-sm {
+    @apply text-sm;
+  }
+  
+  .mobile-hidden {
+    @apply hidden;
+  }
+
+  .mobile-full-width {
+    @apply w-full;
+  }
+
+  /* Adjust button sizes for mobile */
+  .btn-primary,
+  .btn-secondary {
+    @apply py-3 px-6 text-base;
+  }
+
+  /* Make cards full width on mobile */
+  .wellness-card {
+    @apply mx-4;
+  }
+
+  /* Adjust form inputs for mobile */
+  .form-input {
+    @apply py-3 text-base;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tablet-padding {
+    @apply px-6;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-break {
+    page-break-before: always;
+  }
+  
+  .health-disclaimer,
+  .emergency-alert {
+    border: 2px solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    border: 1px solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
+
+/* Loading states for better UX */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Custom scrollbar for webkit browsers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400;
+}
+
+/* Focus management for better accessibility */
+.focus-trap {
+  @apply focus:outline-none focus:ring-2 focus:ring-wellness-primary focus:ring-offset-2;
+}
+
+/* Health-specific gradients */
+.gradient-wellness {
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.gradient-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }

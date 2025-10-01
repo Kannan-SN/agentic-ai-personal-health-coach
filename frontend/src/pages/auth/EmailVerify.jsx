@@ -37,10 +37,7 @@ const EmailVerify = () => {
             ...response.data
           }))
 
-          // Auto-redirect after 3 seconds
-          setTimeout(() => {
-            navigate('/create-password')
-          }, 3000)
+
         } else {
           setError(response.message || 'Email verification failed')
         }
@@ -87,8 +84,8 @@ const EmailVerify = () => {
         </Alert>
 
         <div className="text-center">
-          <Button onClick={() => navigate('/create-password')} className="bg-wellness-primary">
-            Continue to Password Creation
+          <Button onClick={() => navigate('/login')} className="bg-wellness-primary">
+            Continue to Login
           </Button>
         </div>
       </div>

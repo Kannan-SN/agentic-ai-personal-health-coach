@@ -6,22 +6,28 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle, Eye, EyeOff, Shield } from 'lucide-react'
 import { signup } from '@/services/user/client'
 import { registerSchema } from '@/utils/validation'
+import PasswordStrengthIndicator from './PasswordStrengthIndicator'
 
 const Register = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(registerSchema),
   })
+
+  const password = watch('password')
 
   const onSubmit = async (data) => {
     setLoading(true)
@@ -29,7 +35,9 @@ const Register = () => {
     setSuccess(false)
 
     try {
-      const response = await signup(data)
+      const response = await signup({
+        ...data
+      })
       
       if (response.success) {
         setSuccess(true)
@@ -128,7 +136,60 @@ const Register = () => {
           )}
         </div>
 
-        <Button type="submit" className="w-full bg-wellness-primary hover:bg-wellness-primary/90" disabled={loading}>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Create a strong password"
+              {...register('password')}
+              className={errors.password ? 'border-wellness-danger pr-10' : 'pr-10'}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {password && <PasswordStrengthIndicator password={password} />}
+          {errors.password && (
+            <p className="text-sm text-wellness-danger">{errors.password.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="Confirm your password"
+              {...register('confirmPassword')}
+              className={errors.confirmPassword ? 'border-wellness-danger pr-10' : 'pr-10'}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="text-sm text-wellness-danger">{errors.confirmPassword.message}</p>
+          )}
+        </div>
+
+     
+
+        <Button 
+          type="submit" 
+          className="w-full bg-wellness-primary hover:bg-wellness-primary/90" 
+          disabled={loading }
+        >
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Create Account
         </Button>
@@ -142,14 +203,6 @@ const Register = () => {
           </Link>
         </p>
       </div>
-
-      <Alert className="bg-amber-50 border-amber-200">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription className="text-sm">
-          By creating an account, you agree to our terms of service and acknowledge that 
-          this platform provides general wellness information only.
-        </AlertDescription>
-      </Alert>
     </div>
   )
 }

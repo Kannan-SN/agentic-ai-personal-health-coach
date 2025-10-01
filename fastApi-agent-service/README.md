@@ -104,7 +104,7 @@ HMAC_AGENT_KEY="your-secure-hmac-key"
 HMAC_USER_KEY="your-secure-hmac-key"
 
 # Service Hosts
-USER_HOST="http://localhost:4000"
+USER_HOST="http://localhost:5001"
 FRONT_HOST="http://localhost:3000"
 
 # Optional

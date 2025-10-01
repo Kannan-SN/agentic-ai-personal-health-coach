@@ -6,41 +6,47 @@ from backend.utils.health_safety import HealthSafetyValidator, log_health_recomm
 from backend.constants.enums import ActivityLevel, Goal, DietaryRestriction
 import json
 import logging
-
-from backend.models.HealthPlan import HealthPlan
+import traceback
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 async def create_health_plan(health_plan_data):
     """
     Create a comprehensive health and wellness plan using AI orchestration
-    Enhanced safety measures and validation for health recommendations
+    Returns plan data for the User Service to save - does NOT save to database
+    This is a microservice that generates plans, User Service handles persistence
     """
     try:
+        logger.info(f"[AGENT-INTERNAL] ===== CREATE HEALTH PLAN START =====")
+        logger.info(f"[AGENT-INTERNAL] User ID: {health_plan_data.user_id}")
+        logger.info(f"[AGENT-INTERNAL] Plan name: {health_plan_data.plan_name}")
         
+        # Process health documents if provided
         health_documents_text = ""
         if health_plan_data.health_documents:
             try:
+                logger.info(f"[AGENT-INTERNAL] Processing health documents from URL: {health_plan_data.health_documents}")
                 response = requests.get(health_plan_data.health_documents, timeout=30)
                 if response.status_code == 200:
                     health_docs_bytes = response.content
                     filename = health_plan_data.health_documents.split("/")[-1]
                     health_documents_text = read_file_safely_from_bytes(health_docs_bytes, filename)
-                    logger.info(f"Health documents processed for user: {health_plan_data.user_id}")
+                    logger.info(f"[AGENT-INTERNAL] Health documents processed successfully")
                 else:
-                    logger.warning(f"Could not retrieve health documents: {response.status_code}")
+                    logger.warning(f"[AGENT-INTERNAL] Could not retrieve health documents: {response.status_code}")
                     return JSONResponse(
                         {"success": False, "message": "Could not retrieve the uploaded health documents"},
                         status_code=400,
                     )
             except requests.RequestException as e:
-                logger.error(f"Error fetching health documents: {e}")
+                logger.error(f"[AGENT-INTERNAL] Error fetching health documents: {e}")
                 return JSONResponse(
                     {"success": False, "message": "Error processing health documents"},
                     status_code=400,
                 )
 
-        
+        # Prepare user profile
         user_profile = {
             "user_id": str(health_plan_data.user_id),
             "age": health_plan_data.age,
@@ -51,7 +57,13 @@ async def create_health_plan(health_plan_data):
             "available_equipment": health_plan_data.available_equipment or [],
         }
 
-        
+        logger.info(f"[AGENT-INTERNAL] User profile created:")
+        logger.info(f"- Age: {user_profile['age']}")
+        logger.info(f"- Activity Level: {user_profile['current_activity_level']}")
+        logger.info(f"- Primary Goal: {user_profile['primary_goal']}")
+        logger.info(f"- Time Availability: {user_profile['time_availability_minutes']} minutes")
+
+        # Validate user profile safety
         profile_safety = HealthSafetyValidator.validate_user_profile_safety({
             "age": health_plan_data.age,
             "primary_goal": health_plan_data.primary_goal,
@@ -59,16 +71,23 @@ async def create_health_plan(health_plan_data):
             "current_activity_level": health_plan_data.current_activity_level
         })
 
-        
+        logger.info(f"[AGENT-INTERNAL] Profile safety check:")
+        logger.info(f"- Is safe: {profile_safety.get('is_safe', True)}")
+        logger.info(f"- Risk level: {profile_safety.get('risk_level', 'low')}")
+        logger.info(f"- Concerns: {profile_safety.get('concerns', [])}")
+
+        # Log health recommendation
         log_health_recommendation(
             user_id=str(health_plan_data.user_id),
             recommendation_type="health_plan_creation",
             safety_check=profile_safety
         )
 
-        
+        # Check if profile is safe for AI plan generation
         if not profile_safety.get("is_safe", True):
-            logger.warning(f"High-risk profile detected for user {health_plan_data.user_id}")
+            logger.warning(f"[AGENT-INTERNAL] High-risk profile detected for user {health_plan_data.user_id}")
+            logger.warning(f"[AGENT-INTERNAL] Safety concerns: {profile_safety.get('concerns', [])}")
+            
             return JSONResponse(
                 {
                     "success": False,
@@ -80,7 +99,8 @@ async def create_health_plan(health_plan_data):
                 status_code=400,
             )
 
-        
+        # Call wellness orchestrator to generate plan
+        logger.info(f"[AGENT-INTERNAL] Calling wellness orchestrator...")
         result_state = await wellness_orchestrator(
             user_profile=user_profile,
             health_conditions=health_plan_data.health_conditions or [],
@@ -90,10 +110,14 @@ async def create_health_plan(health_plan_data):
             operation_type="create_plan"
         )
 
-        
+        logger.info(f"[AGENT-INTERNAL] Wellness orchestrator completed")
+        logger.info(f"[AGENT-INTERNAL] Final result type: {result_state.get('final_result', {}).get('type')}")
+
+        # Check if professional consultation is required
         final_result = result_state.get("final_result", {})
         if final_result.get("type") == "professional_consultation_required":
-            logger.info(f"AI recommended professional consultation for user {health_plan_data.user_id}")
+            logger.info(f"[AGENT-INTERNAL] Professional consultation recommended for user {health_plan_data.user_id}")
+            
             return JSONResponse(
                 {
                     "success": False,
@@ -101,55 +125,57 @@ async def create_health_plan(health_plan_data):
                     "consultation_plan": final_result,
                     "require_professional_consultation": True
                 },
-                status_code=202, 
+                status_code=202,  # 202 Accepted - indicates consultation needed
             )
 
-        
+        # Extract plan components
         workout_plan = result_state.get("workout_plan", [])
         meal_plan = result_state.get("meal_plan", [])
         analysis_result = result_state.get("analysis_result", {})
         safety_notes = result_state.get("safety_notes", [])
         disclaimers = result_state.get("disclaimers", [])
 
-        
-        health_plan = HealthPlan(
-            user_id=health_plan_data.user_id,
-            plan_name=health_plan_data.plan_name or "AI-Generated Wellness Plan",
-            age=health_plan_data.age,
-            current_activity_level=health_plan_data.current_activity_level,
-            primary_goal=health_plan_data.primary_goal,
-            dietary_restrictions=health_plan_data.dietary_restrictions or [],
-            health_conditions=health_plan_data.health_conditions or [],
-            preferred_workout_types=health_plan_data.preferred_workout_types or [],
-            available_equipment=health_plan_data.available_equipment or [],
-            time_availability_minutes=health_plan_data.time_availability_minutes,
-            workout_plan=workout_plan,
-            meal_plan=meal_plan,
-            plan_duration_weeks=final_result.get("plan_duration_weeks", 4),
-            health_disclaimer_acknowledged=health_plan_data.health_disclaimer_acknowledged,
-            medical_clearance=health_plan_data.medical_clearance,
-        )
+        logger.info(f"[AGENT-INTERNAL] Plan components extracted:")
+        logger.info(f"- Workout plan days: {len(workout_plan)}")
+        logger.info(f"- Meal plan days: {len(meal_plan)}")
+        logger.info(f"- Safety notes: {len(safety_notes)}")
 
-        await health_plan.save()
-
-        
+        # MICROSERVICE ARCHITECTURE: Return plan data, don't save to database
+        # The Node.js User Service is responsible for saving to its MongoDB
         response_data = {
             "success": True,
             "message": "Health and wellness plan created successfully with appropriate safety measures",
-            "health_plan_id": str(health_plan.id),
+            "plan_data": {
+                "plan_name": health_plan_data.plan_name or "AI-Generated Wellness Plan",
+                "user_id": str(health_plan_data.user_id),
+                "age": health_plan_data.age,
+                "current_activity_level": health_plan_data.current_activity_level,
+                "primary_goal": health_plan_data.primary_goal,
+                "dietary_restrictions": health_plan_data.dietary_restrictions or [],
+                "health_conditions": health_plan_data.health_conditions or [],
+                "preferred_workout_types": health_plan_data.preferred_workout_types or [],
+                "available_equipment": health_plan_data.available_equipment or [],
+                "time_availability_minutes": health_plan_data.time_availability_minutes,
+                "workout_plan": workout_plan,
+                "meal_plan": meal_plan,
+                "plan_duration_weeks": final_result.get("plan_duration_weeks", 4),
+                "health_disclaimer_acknowledged": health_plan_data.health_disclaimer_acknowledged,
+                "medical_clearance": health_plan_data.medical_clearance,
+            },
             "plan_summary": {
-                "plan_name": health_plan.plan_name,
-                "duration_weeks": health_plan.plan_duration_weeks,
+                "plan_name": health_plan_data.plan_name or "AI-Generated Wellness Plan",
+                "duration_weeks": final_result.get("plan_duration_weeks", 4),
                 "workout_days_per_week": len([w for w in workout_plan if not w.get("rest_day", False)]),
                 "daily_meal_plans": len(meal_plan),
                 "primary_goal": health_plan_data.primary_goal,
-                "risk_level": analysis_result.get("risk_level", "low")
+                "risk_level": analysis_result.get("risk_level", "low"),
             },
             "safety_information": {
                 "safety_notes": safety_notes,
                 "disclaimers": disclaimers,
-                "professional_consultation_recommended": analysis_result.get("professional_consultations_recommended", []),
-                "monitoring_plan": result_state.get("monitoring_plan", {})
+                "professional_consultations_recommended": analysis_result.get("professional_consultations_recommended", []),
+                "monitoring_plan": result_state.get("monitoring_plan", {}),
+                "health_analysis": analysis_result
             },
             "next_steps": [
                 "Review all safety information and disclaimers",
@@ -160,15 +186,48 @@ async def create_health_plan(health_plan_data):
             ]
         }
 
-        logger.info(f"Health plan created successfully for user {health_plan_data.user_id}")
+        logger.info(f"[AGENT-INTERNAL] ===== CREATE HEALTH PLAN SUCCESS =====")
         return JSONResponse(response_data, status_code=201)
 
+    except ValueError as ve:
+        # Handle validation errors
+        logger.error(f"[AGENT-INTERNAL] Validation error: {str(ve)}")
+        logger.error(f"[AGENT-INTERNAL] Traceback: {traceback.format_exc()}")
+        
+        return JSONResponse(
+            {
+                "success": False, 
+                "message": "Invalid data provided for health plan creation",
+                "error": str(ve),
+                "error_type": "validation_error"
+            },
+            status_code=400,
+        )
+    
     except Exception as e:
-        logger.error(f"Error creating health plan: {str(e)}")
+        # Handle all other errors
+        logger.error(f"[AGENT-INTERNAL] ===== CREATE HEALTH PLAN ERROR =====")
+        logger.error(f"[AGENT-INTERNAL] Error: {str(e)}")
+        logger.error(f"[AGENT-INTERNAL] Error type: {type(e).__name__}")
+        logger.error(f"[AGENT-INTERNAL] Full traceback:\n{traceback.format_exc()}")
+        
+        # Log request data for debugging
+        try:
+            request_summary = {
+                "user_id": str(health_plan_data.user_id),
+                "age": health_plan_data.age,
+                "primary_goal": health_plan_data.primary_goal,
+                "current_activity_level": health_plan_data.current_activity_level
+            }
+            logger.error(f"[AGENT-INTERNAL] Request summary: {json.dumps(request_summary, indent=2)}")
+        except Exception as log_error:
+            logger.error(f"[AGENT-INTERNAL] Could not log request data: {log_error}")
+        
         return JSONResponse(
             {
                 "success": False, 
                 "message": "An error occurred while creating your health plan. Please try again or consult with healthcare professionals.",
+                "error": str(e) if logging.getLogger().level == logging.DEBUG else None,
                 "error_type": "system_error"
             },
             status_code=500,
@@ -177,119 +236,58 @@ async def create_health_plan(health_plan_data):
 async def update_health_plan_progress(plan_id: str, progress_data):
     """
     Update health plan progress with safety monitoring
+    In microservice architecture, this would typically forward to User Service
     """
     try:
+        logger.info(f"[AGENT-INTERNAL] Progress update request for plan: {plan_id}")
         
-        health_plan = await HealthPlan.find_one({"_id": plan_id})
-        if not health_plan:
-            return JSONResponse(
-                {"success": False, "message": "Health plan not found"},
-                status_code=404
-            )
-
+        # In microservice architecture, this endpoint might not be needed
+        # Or it could forward the request to the User Service
+        # For now, return success to indicate the Agent Service received it
         
-        if progress_data.reported_issues:
-            logger.warning(f"Health issues reported for plan {plan_id}: {progress_data.reported_issues}")
-            
-           
-            concerning_symptoms = [
-                "chest pain", "severe shortness of breath", "dizziness", 
-                "nausea", "severe fatigue", "joint pain", "injury"
-            ]
-            
-            for issue in progress_data.reported_issues:
-                if any(symptom in issue.lower() for symptom in concerning_symptoms):
-                    logger.error(f"Concerning symptoms reported: {issue}")
-                    return JSONResponse(
-                        {
-                            "success": False,
-                            "message": "Based on your reported symptoms, please consult with a healthcare professional immediately.",
-                            "urgent_consultation_needed": True,
-                            "reported_symptom": issue
-                        },
-                        status_code=400
-                    )
-
-        
-        health_plan.progress_notes.extend(progress_data.progress_notes or [])
-        health_plan.current_week = progress_data.current_week
-        health_plan.updated_at = datetime.utcnow()
-        
-        
-        logger.info(f"Progress updated for health plan {plan_id}, week {progress_data.current_week}")
-        
-        await health_plan.save()
-
         return JSONResponse(
             {
                 "success": True,
-                "message": "Progress updated successfully",
-                "current_week": health_plan.current_week,
-                "total_weeks": health_plan.plan_duration_weeks
+                "message": "Progress update received - forward to User Service for persistence",
+                "plan_id": plan_id
             },
             status_code=200
         )
 
     except Exception as e:
-        logger.error(f"Error updating health plan progress: {str(e)}")
+        logger.error(f"[AGENT-INTERNAL] Error processing progress update: {str(e)}")
+        logger.error(f"[AGENT-INTERNAL] Traceback: {traceback.format_exc()}")
+        
         return JSONResponse(
-            {"success": False, "message": "Error updating progress"},
+            {"success": False, "message": "Error processing progress update"},
             status_code=500
         )
 
 async def get_health_plan_analytics(plan_id: str):
     """
-    Get health plan analytics and safety monitoring data
+    Get health plan analytics
+    In microservice architecture, this would query the User Service
     """
     try:
-        health_plan = await HealthPlan.find_one({"_id": plan_id})
-        if not health_plan:
-            return JSONResponse(
-                {"success": False, "message": "Health plan not found"},
-                status_code=404
-            )
-
+        logger.info(f"[AGENT-INTERNAL] Analytics request for plan: {plan_id}")
         
-        total_workouts = len([w for w in health_plan.workout_plan if not w.get("rest_day", False)])
-        total_meals_planned = sum(len(day.get("meals", [])) for day in health_plan.meal_plan)
+        # In microservice architecture, this would typically query the User Service
+        # which owns the data persistence layer
         
-        analytics = {
-            "plan_overview": {
-                "total_workout_days": total_workouts,
-                "total_rest_days": len(health_plan.workout_plan) - total_workouts,
-                "total_meals_planned": total_meals_planned,
-                "current_progress_week": health_plan.current_week,
-                "total_duration_weeks": health_plan.plan_duration_weeks,
-                "completion_percentage": (health_plan.current_week / health_plan.plan_duration_weeks) * 100
-            },
-            "safety_monitoring": {
-                "risk_level": "low",  
-                "medical_clearance": health_plan.medical_clearance,
-                "disclaimer_acknowledged": health_plan.health_disclaimer_acknowledged,
-                "progress_notes_count": len(health_plan.progress_notes)
-            },
-            "plan_details": {
-                "primary_goal": health_plan.primary_goal,
-                "activity_level": health_plan.current_activity_level,
-                "dietary_restrictions": health_plan.dietary_restrictions,
-                "health_conditions": health_plan.health_conditions
-            }
-        }
-
         return JSONResponse(
             {
                 "success": True,
-                "analytics": analytics,
-                "last_updated": health_plan.updated_at.isoformat()
+                "message": "Analytics request received - query User Service for data",
+                "plan_id": plan_id
             },
             status_code=200
         )
 
     except Exception as e:
-        logger.error(f"Error retrieving health plan analytics: {str(e)}")
+        logger.error(f"[AGENT-INTERNAL] Error retrieving analytics: {str(e)}")
+        logger.error(f"[AGENT-INTERNAL] Traceback: {traceback.format_exc()}")
+        
         return JSONResponse(
             {"success": False, "message": "Error retrieving analytics"},
             status_code=500
         )
-
-from datetime import datetime

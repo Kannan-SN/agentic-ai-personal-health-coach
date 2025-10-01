@@ -96,7 +96,7 @@ Provide a comprehensive but conservative health readiness assessment in this JSO
     "Conservative note 2"
   ],
   "risk_level": "low|moderate|high|very_high",
-  "proceed_with_ai_plan": false
+  "proceed_with_ai_plan": true|false
 }}
 
 IMPORTANT GUIDELINES:
@@ -115,7 +115,8 @@ Focus on safety, conservative approaches, and professional guidance rather than 
         analysis = json.loads(
             response.content.strip().replace("```json\n", "").replace("```", "")
         )
-        
+        print('analysis: ', analysis);
+        print(isinstance(analysis, dict));
        
         analysis = validate_health_analysis_safety(analysis, profile, health_conditions)
         

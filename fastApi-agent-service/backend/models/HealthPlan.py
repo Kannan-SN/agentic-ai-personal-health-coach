@@ -27,7 +27,7 @@ class Workout(Document):
     warm_up: str
     exercises: List[Exercise] = []
     cool_down: str
-    intensity_level: IntensityLevel
+    intensity_level: IntensityLevel=None
     estimated_calories_burned: int = Field(ge=0, le=1000)
     rest_day: bool = False
     notes: str = ""

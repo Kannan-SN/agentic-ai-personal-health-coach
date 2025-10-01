@@ -99,6 +99,9 @@ Return ONLY a JSON array with this exact structure:
     "notes": "Focus on proper form over speed or repetitions"
   }}
 ]
+Provide the response only in JSON string format without any additional text or no formatting needed.
+Do not enclose the JSON string in quotes or any other characters.
+Strictly follow the JSON string format and no need of Readme formatting.
 
 IMPORTANT: Include appropriate rest days and conservative calorie estimates.
 Never recommend exercises that could be dangerous for the general population.
@@ -107,6 +110,7 @@ If user has health conditions, make the plan extra conservative and recommend pr
 
     try:
         response = health_llm.invoke(prompt)
+        print('response: ', response.content);
         workout_plan = json.loads(
             response.content.strip().replace("```json\n", "").replace("```", "")
         )

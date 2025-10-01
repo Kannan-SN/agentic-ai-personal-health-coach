@@ -140,6 +140,31 @@ async def create_health_plan(health_plan_data):
         logger.info(f"- Meal plan days: {len(meal_plan)}")
         logger.info(f"- Safety notes: {len(safety_notes)}")
 
+        # CRITICAL: Final validation to ensure all data is clean
+        logger.info(f"[AGENT-INTERNAL] Performing final data validation...")
+        
+        # Validate workout plan structure
+        for idx, day in enumerate(workout_plan):
+            # Ensure rest days don't have intensity_level
+            if day.get('rest_day', False):
+                if 'intensity_level' in day:
+                    logger.warning(f"[AGENT-INTERNAL] Removing intensity_level from rest day {day.get('day')}")
+                    del day['intensity_level']
+            
+            # Validate exercises exist
+            if 'exercises' not in day:
+                day['exercises'] = []
+            
+            # Log any potential issues
+            if not day.get('rest_day', False) and len(day.get('exercises', [])) == 0:
+                logger.warning(f"[AGENT-INTERNAL] Day {day.get('day')} is not a rest day but has no exercises")
+        
+        # Deduplicate safety notes and disclaimers
+        safety_notes = list(dict.fromkeys(safety_notes))  # Remove duplicates while preserving order
+        disclaimers = list(dict.fromkeys(disclaimers))
+        
+        logger.info(f"[AGENT-INTERNAL] Validation complete - data ready for Node.js")
+
         # MICROSERVICE ARCHITECTURE: Return plan data, don't save to database
         # The Node.js User Service is responsible for saving to its MongoDB
         response_data = {
@@ -156,7 +181,7 @@ async def create_health_plan(health_plan_data):
                 "preferred_workout_types": health_plan_data.preferred_workout_types or [],
                 "available_equipment": health_plan_data.available_equipment or [],
                 "time_availability_minutes": health_plan_data.time_availability_minutes,
-                "workout_plan": workout_plan,
+                "workout_plan": workout_plan,  # Already normalized in workout_plan_generator
                 "meal_plan": meal_plan,
                 "plan_duration_weeks": final_result.get("plan_duration_weeks", 4),
                 "health_disclaimer_acknowledged": health_plan_data.health_disclaimer_acknowledged,

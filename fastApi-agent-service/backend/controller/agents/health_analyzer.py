@@ -1,4 +1,3 @@
-
 from typing import TypedDict, List, Dict, Any
 from backend.utils.llm import health_llm
 from backend.utils.health_safety import HealthSafetyValidator
@@ -22,6 +21,40 @@ class WellnessOrchestratorState(TypedDict):
     disclaimers: list
     analysis_result: dict
 
+def normalize_consultation_types(analysis: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize consultation types to match Node.js Mongoose schema enums
+    """
+    # Map human-readable types to snake_case enum values
+    type_map = {
+        'Primary Care Physician': 'primary_care',
+        'Primary Care': 'primary_care',
+        'Registered Dietitian': 'registered_dietitian',
+        'Dietitian': 'registered_dietitian',
+        'Cardiologist': 'cardiologist',
+        'Endocrinologist': 'endocrinologist',
+        'Orthopedic Specialist': 'orthopedic',
+        'Orthopedic': 'orthopedic',
+        'Physical Therapist': 'physical_therapist',
+        'Mental Health Professional': 'mental_health',
+        'Therapist': 'mental_health',
+        'Certified Fitness Professional': 'fitness_professional',
+        'Fitness Professional': 'fitness_professional'
+    }
+    
+    consultations = analysis.get('professional_consultations_recommended', [])
+    for consult in consultations:
+        original_type = consult.get('type', '')
+        # Try to map it, otherwise convert to snake_case
+        mapped_type = type_map.get(original_type)
+        if not mapped_type:
+            mapped_type = original_type.lower().replace(' ', '_')
+        consult['type'] = mapped_type
+        
+        logger.info(f"Consultation type normalized: '{original_type}' -> '{mapped_type}'")
+    
+    return analysis
+
 def analyze_user_health_profile(state: WellnessOrchestratorState) -> WellnessOrchestratorState:
     """
     Analyze user health profile for safety concerns and provide recommendations
@@ -30,7 +63,7 @@ def analyze_user_health_profile(state: WellnessOrchestratorState) -> WellnessOrc
     profile = state["user_profile"]
     health_conditions = state.get("health_conditions", [])
     
-    
+    # Run safety validation
     profile_safety = HealthSafetyValidator.validate_user_profile_safety({
         "age": profile.get("age"),
         "primary_goal": profile.get("primary_goal"),
@@ -38,7 +71,7 @@ def analyze_user_health_profile(state: WellnessOrchestratorState) -> WellnessOrc
         "current_activity_level": profile.get("current_activity_level")
     })
     
-   
+    # Build comprehensive prompt with EXPLICIT enum constraints
     prompt = f"""
 You are a healthcare professional conducting a preliminary health assessment for exercise and nutrition planning.
 Your primary responsibility is to identify potential risks and recommend appropriate professional consultation.
@@ -59,24 +92,40 @@ User Profile Analysis:
 - Medical Clearance Confirmed: {state.get('medical_clearance', False)}
 
 SAFETY CONCERNS IDENTIFIED:
-{'; '.join(profile_safety.get('concerns', []))}
+{'; '.join(profile_safety.get('concerns', [])) if profile_safety.get('concerns') else 'None'}
 
 EXISTING RECOMMENDATIONS:
-{'; '.join(profile_safety.get('recommendations', []))}
+{'; '.join(profile_safety.get('recommendations', [])) if profile_safety.get('recommendations') else 'None'}
 
-Provide a comprehensive but conservative health readiness assessment in this JSON format:
+CRITICAL: Use ONLY these EXACT consultation types (all lowercase, snake_case):
+- primary_care
+- registered_dietitian
+- cardiologist
+- endocrinologist
+- orthopedic
+- physical_therapist
+- mental_health
+- fitness_professional
+
+Provide a comprehensive but conservative health readiness assessment in this EXACT JSON format (NO markdown, NO code blocks):
 {{
-  "overall_readiness_level": "low|moderate|high",
+  "overall_readiness_level": "low",
   "primary_safety_concerns": [
     "Specific concern 1",
     "Specific concern 2"
   ],
   "professional_consultations_recommended": [
     {{
-      "type": "Primary Care Physician",
-      "priority": "high|moderate|low",
+      "type": "primary_care",
+      "priority": "high",
       "reason": "Specific reason for consultation",
       "before_starting": true
+    }},
+    {{
+      "type": "registered_dietitian",
+      "priority": "moderate",
+      "reason": "Nutrition guidance needed",
+      "before_starting": false
     }}
   ],
   "safe_starting_recommendations": {{
@@ -95,8 +144,8 @@ Provide a comprehensive but conservative health readiness assessment in this JSO
     "Conservative note 1",
     "Conservative note 2"
   ],
-  "risk_level": "low|moderate|high|very_high",
-  "proceed_with_ai_plan": true|false
+  "risk_level": "low",
+  "proceed_with_ai_plan": true
 }}
 
 IMPORTANT GUIDELINES:
@@ -105,22 +154,28 @@ IMPORTANT GUIDELINES:
 3. If user hasn't exercised recently, recommend gradual introduction
 4. If user reports concerning symptoms, recommend immediate medical consultation
 5. Always recommend professional consultation for weight loss goals
-6. Be extremely conservative - better to over-recommend professional help than under-recommend
+6. Be extremely conservative - better to over-recommend professional help
+7. Use ONLY the consultation types listed above (lowercase, snake_case)
+8. overall_readiness_level must be "low", "moderate", or "high"
+9. risk_level must be "low", "moderate", "high", or "very_high"
+10. Return ONLY valid JSON, no markdown formatting
 
-Focus on safety, conservative approaches, and professional guidance rather than aggressive fitness or nutrition interventions.
+Focus on safety, conservative approaches, and professional guidance.
 """
 
     try:
         response = health_llm.invoke(prompt)
         analysis = json.loads(
-            response.content.strip().replace("```json\n", "").replace("```", "")
+            response.content.strip().replace("```json\n", "").replace("```", "").replace("```json", "")
         )
-        print('analysis: ', analysis);
-        print(isinstance(analysis, dict));
-       
+        
+        # CRITICAL: Normalize consultation types
+        analysis = normalize_consultation_types(analysis)
+        
+        # Validate and enhance safety
         analysis = validate_health_analysis_safety(analysis, profile, health_conditions)
         
-        
+        # Determine if AI plan should proceed
         should_proceed = analysis.get("proceed_with_ai_plan", False)
         
         if not should_proceed or analysis.get("risk_level") in ["high", "very_high"]:
@@ -130,7 +185,6 @@ Focus on safety, conservative approaches, and professional guidance rather than 
                 "Profile requires professional medical evaluation before proceeding with AI-generated plans"
             )
         
-        
         if analysis.get("risk_level") in ["high", "very_high"]:
             logger.warning(f"High-risk user profile detected: {analysis.get('primary_safety_concerns')}")
         
@@ -138,7 +192,7 @@ Focus on safety, conservative approaches, and professional guidance rather than 
         state["safety_notes"].extend(analysis.get("additional_safety_notes", []))
         state["safety_notes"].extend(profile_safety.get("concerns", []))
         
-       
+        # Add disclaimers
         state["disclaimers"].extend([
             HEALTH_DISCLAIMER,
             EXERCISE_DISCLAIMER, 
@@ -153,7 +207,7 @@ Focus on safety, conservative approaches, and professional guidance rather than 
     except (json.JSONDecodeError, Exception) as e:
         logger.error(f"Error in health analysis: {e}")
         
-        
+        # Ultra-conservative fallback
         fallback_analysis = {
             "overall_readiness_level": "low",
             "primary_safety_concerns": [
@@ -162,13 +216,13 @@ Focus on safety, conservative approaches, and professional guidance rather than 
             ],
             "professional_consultations_recommended": [
                 {
-                    "type": "Primary Care Physician", 
+                    "type": "primary_care",
                     "priority": "high",
                     "reason": "Comprehensive health assessment needed before starting any program",
                     "before_starting": True
                 },
                 {
-                    "type": "Registered Dietitian",
+                    "type": "registered_dietitian",
                     "priority": "high", 
                     "reason": "Professional nutrition guidance needed",
                     "before_starting": True
@@ -203,43 +257,46 @@ def validate_health_analysis_safety(analysis: Dict[str, Any], profile: Dict[str,
     """
     Validate AI-generated health analysis for safety and conservatism
     """
-    
     age = profile.get("age")
     
-    
+    # Age-based risk elevation
     if age and (age < 18 or age > 65):
-        analysis["risk_level"] = max(analysis.get("risk_level", "low"), "moderate", key=lambda x: ["low", "moderate", "high", "very_high"].index(x))
+        if analysis.get("risk_level") == "low":
+            analysis["risk_level"] = "moderate"
         analysis["proceed_with_ai_plan"] = False
         if not any("age" in concern.lower() for concern in analysis.get("primary_safety_concerns", [])):
             analysis["primary_safety_concerns"].append("Age requires special consideration and professional supervision")
     
-   
+    # Health conditions always require consultation
     if health_conditions:
-        analysis["risk_level"] = max(analysis.get("risk_level", "low"), "moderate", key=lambda x: ["low", "moderate", "high", "very_high"].index(x))
+        if analysis.get("risk_level") == "low":
+            analysis["risk_level"] = "moderate"
         analysis["proceed_with_ai_plan"] = False
         if not any("health condition" in concern.lower() for concern in analysis.get("primary_safety_concerns", [])):
             analysis["primary_safety_concerns"].append("Existing health conditions require medical clearance")
     
-    
+    # Ensure primary care is recommended for moderate+ risk
     if not profile.get("medical_clearance", False) and analysis.get("risk_level") in ["moderate", "high", "very_high"]:
         analysis["proceed_with_ai_plan"] = False
         analysis["primary_safety_concerns"].append("Medical clearance required before proceeding")
     
-    
+    # Add primary care consultation if missing for high risk
     if analysis.get("risk_level") in ["high", "very_high"]:
         consultations = analysis.get("professional_consultations_recommended", [])
-        if not any(consult.get("type") == "Primary Care Physician" for consult in consultations):
+        has_primary_care = any(c.get("type") == "primary_care" for c in consultations)
+        
+        if not has_primary_care:
             analysis["professional_consultations_recommended"].append({
-                "type": "Primary Care Physician",
+                "type": "primary_care",
                 "priority": "high", 
                 "reason": "High risk profile requires medical evaluation",
                 "before_starting": True
             })
     
-    
+    # Validate readiness matches risk level
     risk_readiness_mapping = {
         "low": ["low", "moderate"],
-        "moderate": ["moderate"], 
+        "moderate": ["low", "moderate"], 
         "high": ["low"],
         "very_high": ["low"]
     }
@@ -249,7 +306,7 @@ def validate_health_analysis_safety(analysis: Dict[str, Any], profile: Dict[str,
     
     if current_readiness not in risk_readiness_mapping.get(current_risk, ["low"]):
         logger.warning(f"Adjusting readiness level from {current_readiness} to match risk level {current_risk}")
-        analysis["overall_readiness_level"] = "low" 
+        analysis["overall_readiness_level"] = "low"
     
     return analysis
 
@@ -287,7 +344,7 @@ def generate_progress_monitoring_plan(state: WellnessOrchestratorState) -> Dict[
         "professional_check_ins": []
     }
     
-    
+    # Adjust based on risk level
     if risk_level in ["high", "very_high"]:
         monitoring_plan["check_in_frequency"] = "every 2-3 days initially"
         monitoring_plan["professional_check_ins"].append({

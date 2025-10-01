@@ -117,7 +117,7 @@ const MealSchema = new mongoose.Schema({
     },
     meal_type: {
         type: String,
-        enum: ['breakfast', 'lunch', 'dinner', 'snack'],
+        enum: ['breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout'],
         required: true
     },
     ingredients: [{
@@ -143,7 +143,7 @@ const MealSchema = new mongoose.Schema({
     estimated_calories: {
         type: Number,
         min: 50,
-        max: 800,
+        max: 1500,  // FIXED: Changed from 800 to 1500 to allow larger dinners
         required: true
     },
     macronutrients: {
@@ -158,6 +158,10 @@ const MealSchema = new mongoose.Schema({
     }],
     allergen_warnings: [String],
     nutrition_notes: {
+        type: String,
+        default: ''
+    },
+    food_safety_notes: {  // ADDED: Support for food safety notes from LLM
         type: String,
         default: ''
     }

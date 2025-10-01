@@ -7,22 +7,11 @@ An AI-powered personal health and wellness coaching service that provides person
 
 ## Features
 
-- 🏋️ **AI-Generated Workout Plans** - Personalized exercise routines with safety considerations
-- 🥗 **Nutritional Meal Planning** - Balanced meal suggestions respecting dietary restrictions
-- 🩺 **Health Safety Analysis** - Comprehensive safety screening and professional consultation recommendations
-- 📊 **Progress Monitoring** - Safe progress tracking with health concern detection
-- 🔒 **HIPAA-Compliant Security** - Enterprise-grade security for health data protection
-- 🚨 **Emergency Protocols** - Automatic detection of concerning symptoms with appropriate referrals
+- **AI-Generated Workout Plans** - Personalized exercise routines with safety considerations
+- **Nutritional Meal Planning** - Balanced meal suggestions respecting dietary restrictions
+- **Health Safety Analysis** - Comprehensive safety screening and professional consultation recommendations
+- **Progress Monitoring** - Safe progress tracking with health concern detection
 
-## Safety-First Architecture
-
-This service is built with safety as the primary concern:
-
-- **Conservative AI Recommendations** - All AI-generated plans err on the side of caution
-- **Professional Consultation Integration** - Automatic recommendations for healthcare provider consultation
-- **Symptom Screening** - Continuous monitoring for concerning health indicators
-- **Emergency Detection** - Immediate routing to emergency services when appropriate
-- **Comprehensive Disclaimers** - Clear communication of AI limitations
 
 ## Prerequisites
 
@@ -97,15 +86,29 @@ Create a `local.env` file with the following variables:
 
 ```bash
 # Required
+CORS_ORIGIN="http://localhost:3000,http://localhost:3001"
+
 MONGO_URI="mongodb://localhost:27017/wellness-agent-service"
-GEMINI_API_KEY="your-gemini-api-key"
-HMAC_AGENT_KEY="your-secure-hmac-key"
-HMAC_USER_KEY="your-secure-hmac-key"
 
-# Service Hosts
+FRONTEND_HOST="http://localhost:3000" 
+AGENT_HOST="http://localhost:5000"    
 USER_HOST="http://localhost:5001"
-FRONT_HOST="http://localhost:3000"
 
+PORT=5000
+ENVIRONMENT="development"
+
+GEMINI_API_KEY=""
+
+HMAC_AGENT_KEY=""
+HMAC_USER_KEY=""
+
+HEALTH_DATA_RETENTION_DAYS=365
+MAX_WORKOUT_DURATION_MINUTES=120
+MIN_WORKOUT_DURATION_MINUTES=10
+
+
+LOG_LEVEL="INFO"
+AUDIT_LOG_ENABLED="true"
 
 ## API Documentation
 
@@ -114,7 +117,6 @@ Once running, visit:
 - **ReDoc:** `http://localhost:5000/redoc`
 - **Health Check:** `http://localhost:5000/health`
 
-## Health & Safety Architecture
 
 ### Multi-Agent AI System
 
@@ -125,14 +127,9 @@ Once running, visit:
 ### Safety Validation Pipeline
 
 ```
-User Input → Health Screening → Risk Assessment → AI Generation → Safety Validation → Professional Review Recommendation
+User Input → Health Screening → AI Generation→ Professional Plan Recommendation
 ```
 
-### Emergency Response Protocol
-
-- **Immediate Symptoms:** Chest pain, breathing difficulty → Emergency services
-- **Concerning Patterns:** Rapid weight loss, excessive fatigue → Healthcare provider
-- **High-Risk Profiles:** Chronic conditions, age factors → Medical clearance required
 
 ## Security Features
 
@@ -149,15 +146,6 @@ The service is designed to complement, not replace, professional healthcare:
 - **Medical Clearance Tracking** - Monitors and requires professional approval for high-risk users
 - **Healthcare Provider Integration** - APIs for professional oversight and monitoring
 - **Progress Sharing** - Secure data export for professional consultations
-
-## Contributing
-
-We welcome contributions that enhance safety and effectiveness:
-
-1. All health-related features must include comprehensive safety measures
-2. Professional medical review required for any clinical recommendations
-3. User testing must include healthcare professional oversight
-4. Code must pass security and privacy audits
 
 
 

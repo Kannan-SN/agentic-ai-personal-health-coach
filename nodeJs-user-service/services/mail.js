@@ -228,14 +228,7 @@ export const sendEmailViaTemplate = async ({ identifier, to, content, bcc, optio
                                     <li>Review the safety concerns in your wellness dashboard</li>
                                 </ol>
                             </div>
-                            <div style="background-color: #d1ecf1; padding: 20px; border-radius: 5px; margin: 20px 0;">
-                                <h4 style="margin: 0 0 15px 0; color: #0c5460;">Emergency Resources:</h4>
-                                <ul style="margin: 0; padding-left: 20px; color: #0c5460;">
-                                    <li><strong>Emergency Services:</strong> 911 (US)</li>
-                                    <li><strong>Poison Control:</strong> 1-800-222-1222 (US)</li>
-                                    <li><strong>Crisis Text Line:</strong> Text HOME to 741741</li>
-                                </ul>
-                            </div>
+                           
                             <p style="font-size: 14px; color: #666; font-style: italic;">
                                 This alert was generated to protect your health and safety. When in doubt, always consult with qualified healthcare professionals.
                             </p>

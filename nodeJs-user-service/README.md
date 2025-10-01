@@ -4,12 +4,6 @@
 
 **This service provides general wellness information only and cannot replace professional medical advice.** Always consult with qualified healthcare professionals for medical concerns, diagnosis, or treatment. This AI system has significant limitations and cannot account for individual medical complexities.
 
-## 🏥 Emergency Resources
-
-- **Emergency Services:** 911 (US)
-- **Poison Control:** 1-800-222-1222 (US)  
-- **Crisis Text Line:** Text HOME to 741741
-- **Suicide Prevention:** 988 (US)
 
 ## 📋 Project Overview
 
@@ -236,102 +230,6 @@ PASSWORD="your-brevo-api-key"
 - `POST /api/internal/update-plan-status/:id` - Update plan status
 - `POST /api/internal/professional-consultation-required/:userId` - Flag consultation requirements
 
-## 📊 Health Data Compliance
 
-### Data Protection
-- **7-Year Retention:** Health records retained for 7 years per healthcare standards
-- **Encryption at Rest:** All health data encrypted in database and file storage
-- **Audit Trails:** Comprehensive logging of all health data access
-- **Access Controls:** Role-based access with health-specific permissions
-
-### Privacy Measures
-- **No Tracking:** Email notifications do not include tracking pixels
-- **Minimal Data Collection:** Only collect health data necessary for safety
-- **User Control:** Users control data sharing and retention preferences
-- **Geographic Compliance:** Configurable for international health data regulations
-
-## 🚨 Safety Protocols
-
-### High-Risk User Management
-1. **Initial Assessment:** All users undergo safety profiling during health profile creation
-2. **Professional Gates:** High-risk users cannot access AI plans without medical clearance
-3. **Continuous Monitoring:** Ongoing safety flag detection throughout service use
-4. **Emergency Response:** Immediate escalation protocols for concerning symptoms
-
-### Emergency Detection Triggers
-- **Pain Levels:** ≥7/10 pain requires immediate medical consultation
-- **Emergency Keywords:** "chest pain", "can't breathe", "severe pain", etc.
-- **Rapid Changes:** Sudden weight loss/gain, extreme fatigue patterns
-- **Mental Health Concerns:** Suicidal ideation, severe depression indicators
-
-### Professional Consultation Requirements
-- **Age-Based:** <16 or >65 years require professional supervision
-- **Health Conditions:** Heart disease, diabetes, pregnancy, recent surgery, etc.
-- **Medication Interactions:** Medications affecting exercise or nutrition
-- **Injury History:** Recent or chronic injuries affecting mobility
-
-## 🔧 Development Guidelines
-
-### Health-Focused Validation
-- **Conservative Limits:** All limits err on the side of safety
-- **Progressive Enhancement:** Start with basic safety, add features gradually
-- **Professional Override:** Healthcare providers can override AI recommendations
-- **Transparent Limitations:** Always communicate what the AI cannot do
-
-### Testing Health Features
-- **Safety Scenario Testing:** Test emergency detection with various symptom descriptions
-- **Boundary Testing:** Verify safety limits are enforced correctly
-- **Integration Testing:** Ensure Agent Service communication maintains safety protocols
-- **User Flow Testing:** Verify high-risk users are properly routed to professionals
-
-## 📞 Professional Resources
-
-- **Find Doctors:** [AMA Physician Directory](https://www.ama-assn.org/go/freida)
-- **Find Dietitians:** [Academy of Nutrition](https://www.eatright.org/find-a-nutrition-expert)
-- **Find Fitness Professionals:** [ACSM Certified Professionals](https://www.acsm.org/get-stay-certified/find-a-certified-professional)
-
-## 🤝 Contributing
-
-When contributing to this health service:
-
-1. **Safety First:** All contributions must maintain or enhance safety measures
-2. **Professional Consultation:** When in doubt, err on the side of requiring professional guidance
-3. **Conservative Approach:** Prefer underestimating capabilities over overestimating them
-4. **Transparent Limitations:** Clearly communicate what the system cannot do
-5. **Evidence-Based:** Base recommendations on established health and fitness guidelines
-
-## 📜 License
-
-MIT License - See LICENSE file for details
-
----
-
-## ⚠️ Critical Reminders
-
-### For Users
-- **Not Medical Advice:** This service provides general wellness information only
-- **Professional Consultation:** Always consult healthcare professionals for medical concerns
-- **Emergency Situations:** Use emergency services (911) for immediate medical needs
-- **Individual Variation:** Health needs vary significantly between individuals
-
-### For Developers
-- **Health Data Sensitivity:** Treat all health data with maximum security and privacy
-- **Safety Over Features:** Prioritize user safety over feature completeness
-- **Professional Deference:** Always defer to healthcare professionals' expertise
-- **Conservative Design:** When uncertain, choose the safer option
-
-### For Healthcare Professionals
-- **Supplementary Tool:** This service is designed to supplement, not replace, professional care
-- **Professional Override:** Healthcare providers' recommendations always take precedence
-- **Integration Support:** We support integration with professional care workflows
-- **Safety Reporting:** We maintain comprehensive safety monitoring and reporting
-
----
-
-**📧 Contact & Support**
-
-For health-related emergencies: **Call 911 or your local emergency services**
-
-For service support: health-safety@wellness-ai.com
 
 **Remember: Your health and safety are our top priorities. When in doubt, consult with qualified healthcare professionals.**

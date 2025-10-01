@@ -36,16 +36,23 @@ export const signup = async (req, res) => {
             })
         }
 
-        // Create new user with health-specific defaults
+        // Hash password
+        const hashedPassword = await bcryptjs.hash(body.password, bcryptjs.genSaltSync(config.DEFAULT_SALT_ROUNDS + 2))
+
+        // Create new user with password and health-specific defaults
         const user = new User({
             firstName: body.firstName,
             middleName: body.middleName,
             lastName: body.lastName,
             email: body.email,
+            password: hashedPassword,
+            isPasswordUpdated: true,
+            passwordUpdatedOn: new Date(),
             healthStatus: enums.HEALTH_STATUS.PROFILE_INCOMPLETE,
             requiresProfessionalConsultation: true, 
             riskLevel: enums.RISK_LEVELS.LOW,
-            healthDisclaimerAccepted: false
+            healthDisclaimerAccepted: false,
+            status: enums.USER_STATES.NEW
         })
 
         // Generate secure activation token
@@ -87,7 +94,6 @@ export const signup = async (req, res) => {
             })
         }
 
-       
         await user.save()
         await security.save()
 
@@ -103,7 +109,6 @@ export const signup = async (req, res) => {
             next_steps: [
                 'Check your email for activation link',
                 'Complete email verification',
-                'Set up your secure password',
                 'Accept health disclaimers',
                 'Complete health profile for personalized recommendations'
             ],
@@ -164,12 +169,12 @@ export const verifySignup = async (req, res) => {
         security.ipAddress = req.ip
         security.userAgent = req.get('User-Agent')
 
-        // Update user status
+        // Update user status to ACTIVE since password is already set
         const userUpdation = await User.updateOne(
             { _id: security.userId, status: enums.USER_STATES.NEW },
             { 
                 $set: { 
-                    status: enums.USER_STATES.PENDING,
+                    status: enums.USER_STATES.ACTIVE,
                     isEmailVerified: true,
                     healthStatus: enums.HEALTH_STATUS.PROFILE_INCOMPLETE
                 } 
@@ -185,11 +190,13 @@ export const verifySignup = async (req, res) => {
             })
         }
 
-        
+        // Get user details for response
+        const user = await User.findById(security.userId).lean()
+
         const payload = {
             sessionId: uuid(),
             userId: security.userId,
-            mode: enums.USER_STATES.PENDING,
+            mode: enums.USER_STATES.ACTIVE,
             healthAccess: false
         }
 
@@ -217,9 +224,19 @@ export const verifySignup = async (req, res) => {
             partitioned: true,
         }
 
-        res.header('Access-Control-Allow-Origin', config.FRONTEND_HOST)
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
         res.cookie('refreshToken', refreshToken, cookieConfig)
+
+        const responseData = {
+            firstName: user.firstName,
+            middleName: user.middleName,
+            lastName: user.lastName,
+            email: user.email,
+            isPasswordUpdated: true,
+            healthStatus: enums.HEALTH_STATUS.PROFILE_INCOMPLETE,
+            healthDisclaimerAccepted: false,
+            requiresHealthProfile: true,
+            requiresHealthDisclaimer: true
+        }
 
         logAuthEvent('email_verification_success', security.userId, true, {
             ipAddress: req.ip,
@@ -228,10 +245,10 @@ export const verifySignup = async (req, res) => {
 
         return res.status(200).json({ 
             success: true, 
-            message: 'Email verified successfully. Please create your password to continue.',
+            message: 'Email verified successfully. Welcome to your wellness journey!',
             tokens: { accessToken },
+            data: responseData,
             next_steps: [
-                'Create a secure password',
                 'Accept health disclaimers',
                 'Complete your health profile',
                 'Set up emergency contacts'
@@ -248,6 +265,7 @@ export const verifySignup = async (req, res) => {
     }
 }
 
+
 export const createPassword = async (req, res) => {
     try {
         const { user, body } = req
@@ -260,7 +278,6 @@ export const createPassword = async (req, res) => {
             })
         }
 
-        
         const hashedPassword = await bcryptjs.hash(body.password, bcryptjs.genSaltSync(config.DEFAULT_SALT_ROUNDS + 2))
 
         // Update user with password and health-specific defaults
@@ -327,8 +344,7 @@ export const createPassword = async (req, res) => {
             requiresHealthDisclaimer: true
         }
 
-        res.header('Access-Control-Allow-Origin', config.FRONTEND_HOST)
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+        // REMOVED MANUAL CORS HEADERS - LET CORS MIDDLEWARE HANDLE IT
         res.cookie('refreshToken', refreshToken, cookieConfig)
 
         logAuthEvent('password_creation_success', user._id, true, {
@@ -388,7 +404,6 @@ export const signin = async (req, res) => {
             })
         }
 
-       
         if (user.status !== enums.USER_STATES.ACTIVE) {
             logAuthEvent('signin_invalid_status', user._id, false, {
                 ipAddress: req.ip,
@@ -401,7 +416,6 @@ export const signin = async (req, res) => {
             })
         }
 
-        
         const isPasswordValid = await bcryptjs.compare(body.password, user.password)
         if (!isPasswordValid) {
             logAuthEvent('signin_invalid_password', user._id, false, {
@@ -414,15 +428,12 @@ export const signin = async (req, res) => {
             })
         }
 
-        
         await User.updateOne({ _id: user._id }, { $set: { lastLoginOn: new Date() } })
 
-        
         const requiresConsultation = user.riskLevel === enums.RISK_LEVELS.VERY_HIGH || 
                                     user.riskLevel === enums.RISK_LEVELS.HIGH ||
                                     user.requiresProfessionalConsultation
 
-        
         const payload = {
             sessionId: uuid(),
             userId: user._id,
@@ -430,10 +441,10 @@ export const signin = async (req, res) => {
             healthAccess: false 
         }
 
+
         const accessToken = generateJWTToken(payload, false, false)
         const refreshToken = generateJWTToken(payload, true, false)
 
-        
         const session = new Token({
             userId: user._id,
             sessionId: payload.sessionId,
@@ -467,11 +478,10 @@ export const signin = async (req, res) => {
             lastLoginOn: new Date()
         }
 
-        res.header('Access-Control-Allow-Origin', config.FRONTEND_HOST)
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+        // REMOVED MANUAL CORS HEADERS - LET CORS MIDDLEWARE HANDLE IT
         res.cookie('refreshToken', refreshToken, cookieConfig)
 
-        
+        // Set health-related headers
         res.set({
             'X-Health-Status': user.healthStatus,
             'X-Risk-Level': user.riskLevel,
@@ -539,7 +549,6 @@ export const refreshToken = async (req, res) => {
             })
         }
 
-       
         const payload = {
             sessionId: user.sessionId,
             userId: user._id,
@@ -550,7 +559,6 @@ export const refreshToken = async (req, res) => {
         const accessToken = generateJWTToken(payload, false, session.healthDataAccess)
         const refreshToken = generateJWTToken(payload, true, session.healthDataAccess)
 
-        
         await Token.updateOne(
             { sessionId: payload.sessionId },
             { 
@@ -569,8 +577,7 @@ export const refreshToken = async (req, res) => {
             partitioned: true,
         }
 
-        res.header('Access-Control-Allow-Origin', config.FRONTEND_HOST)
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+        // REMOVED MANUAL CORS HEADERS - LET CORS MIDDLEWARE HANDLE IT
         res.cookie('refreshToken', refreshToken, cookieConfig)
 
         logAuthEvent('refresh_token_success', user._id, true, {
@@ -634,8 +641,7 @@ export const signout = async (req, res) => {
             partitioned: true,
         }
 
-        res.header('Access-Control-Allow-Origin', config.FRONTEND_HOST)
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
+        // REMOVED MANUAL CORS HEADERS - LET CORS MIDDLEWARE HANDLE IT
         res.cookie('refreshToken', '', cookieConfig)
 
         return res.status(200).json({ 

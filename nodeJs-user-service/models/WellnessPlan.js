@@ -58,21 +58,21 @@ const WorkoutSchema = new mongoose.Schema({
         type: Number,
         min: enums.SAFETY_LIMITS.MIN_WORKOUT_MINUTES,
         max: enums.SAFETY_LIMITS.MAX_WORKOUT_MINUTES,
-        required: true
+        // required: true
     },
     warm_up: {
         type: String,
-        required: true
+        // required: true
     },
     exercises: [ExerciseSchema],
     cool_down: {
         type: String,
-        required: true
+        // required: true
     },
     intensity_level: {
         type: String,
         enum: Object.values(enums.INTENSITY_LEVELS),
-        required: true
+        
     },
     estimated_calories_burned: {
         type: Number,
@@ -204,7 +204,6 @@ const DailyMealPlanSchema = new mongoose.Schema({
     }
 }, { _id: true })
 
-
 const WellnessPlanSchema = new mongoose.Schema(
     {
         userId: {
@@ -213,11 +212,10 @@ const WellnessPlanSchema = new mongoose.Schema(
             ref: 'users',
             index: true
         },
-        agentServicePlanId: {
-            type: String,
-            required: true,
-            index: true 
-        },
+        
+        // REMOVED: agentServicePlanId - not needed in microservice architecture
+        // The Agent Service generates plans but doesn't persist them
+        // This User Service is the single source of truth for plan data
         
         planName: {
             type: String,
@@ -228,7 +226,6 @@ const WellnessPlanSchema = new mongoose.Schema(
             type: String,
             maxlength: 500
         },
-        
         
         status: {
             type: String,
@@ -248,7 +245,6 @@ const WellnessPlanSchema = new mongoose.Schema(
             default: 1
         },
         
-        
         userProfileSnapshot: {
             age: Number,
             primaryGoal: {
@@ -266,11 +262,9 @@ const WellnessPlanSchema = new mongoose.Schema(
             }
         },
         
-        
         workoutPlan: [WorkoutSchema],
         mealPlan: [DailyMealPlanSchema],
         
-      
         healthAnalysis: {
             overall_readiness_level: {
                 type: String,
@@ -304,10 +298,8 @@ const WellnessPlanSchema = new mongoose.Schema(
             }
         },
         
-       
         safetyNotes: [String],
         disclaimers: [String],
-        
         
         progressTracking: {
             weeklyProgress: [{
@@ -347,7 +339,6 @@ const WellnessPlanSchema = new mongoose.Schema(
             }
         },
         
-       
         chatHistory: [{
             message: String,
             sender: {
@@ -370,7 +361,6 @@ const WellnessPlanSchema = new mongoose.Schema(
             }
         }],
         
-        
         emergencyFlags: [{
             flag: String,
             severity: {
@@ -390,7 +380,6 @@ const WellnessPlanSchema = new mongoose.Schema(
             actionTaken: String
         }],
         
-       
         consultationStatus: {
             required: {
                 type: Boolean,
@@ -410,7 +399,6 @@ const WellnessPlanSchema = new mongoose.Schema(
             nextReviewDate: Date
         },
         
-      
         modificationHistory: [{
             modifiedAt: {
                 type: Date,
@@ -430,7 +418,6 @@ const WellnessPlanSchema = new mongoose.Schema(
             reason: String
         }],
         
-       
         complianceData: {
             healthDisclaimerAccepted: {
                 type: Boolean,
@@ -446,7 +433,6 @@ const WellnessPlanSchema = new mongoose.Schema(
             auditNotes: String
         },
         
-      
         planStartDate: {
             type: Date,
             default: Date.now
@@ -461,7 +447,6 @@ const WellnessPlanSchema = new mongoose.Schema(
         timestamps: true,
         indexes: [
             { userId: 1 },
-            { agentServicePlanId: 1 },
             { status: 1 },
             { currentWeek: 1 },
             { 'healthAnalysis.risk_level': 1 },
@@ -505,21 +490,20 @@ WellnessPlanSchema.methods.addEmergencyFlag = function(flag, severity, descripti
         flaggedAt: new Date()
     })
     
-    
     if (severity === 'critical') {
         this.status = enums.WELLNESS_PLAN_STATES.REQUIRES_REVIEW
         this.pausedAt = new Date()
     }
 }
 
-
+// Method to update last access time
 WellnessPlanSchema.methods.updateAccess = function() {
     this.lastAccessedAt = new Date()
 }
 
-
+// Pre-save middleware
 WellnessPlanSchema.pre('save', function(next) {
-    
+    // Calculate plan end date
     if (!this.planEndDate && this.planStartDate && this.planDurationWeeks) {
         this.planEndDate = new Date(this.planStartDate.getTime() + (this.planDurationWeeks * 7 * 24 * 60 * 60 * 1000))
     }
@@ -535,7 +519,7 @@ WellnessPlanSchema.pre('save', function(next) {
         return next(error)
     }
     
- 
+    // Validate calorie limits
     for (const dailyPlan of this.mealPlan) {
         if (dailyPlan.total_estimated_calories < enums.SAFETY_LIMITS.MIN_CALORIES) {
             const error = new Error(`Day ${dailyPlan.day} calories below safe minimum`)
@@ -549,7 +533,7 @@ WellnessPlanSchema.pre('save', function(next) {
         }
     }
     
- 
+    // Update adherence percentage
     this.calculateAdherence()
     
     next()

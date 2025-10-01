@@ -1,3 +1,4 @@
+// security/passport.js - Fixed health access logic
 import { verifyJWTToken, logAuthEvent } from '@/security/security'
 import { Token, User } from '@/models'
 import * as enums from '@/constants/enum'
@@ -5,7 +6,16 @@ import * as enums from '@/constants/enum'
 export const userAuthenticate = async (req, res, next) => {
     try {
         const isRefreshing = req.path.endsWith('/refresh-token')
-        const isHealthEndpoint = req.path.includes('/health') || req.path.includes('/wellness')
+        
+        // Define health endpoints that require special health access tokens
+        // Most health features only need disclaimer acceptance, not special tokens
+        const healthEndpoints = [
+            // Only truly sensitive operations need health access tokens
+            // '/medical-records',
+            // '/prescription-data'
+        ]
+        
+        const isHealthEndpoint = healthEndpoints.some(endpoint => req.path.includes(endpoint))
         
         let token
         if (isRefreshing) {
@@ -36,6 +46,7 @@ export const userAuthenticate = async (req, res, next) => {
             }
             token = authHeader.split(' ')[1]
         }
+
         let decoded
         try {
             decoded = verifyJWTToken(token, isHealthEndpoint)
@@ -54,7 +65,7 @@ export const userAuthenticate = async (req, res, next) => {
             })
         }
 
-        
+        // Validate session exists and is active
         const tokenRecord = await Token.findOne({ 
             sessionId: decoded.sessionId,
             isSessionEnded: false
@@ -73,7 +84,7 @@ export const userAuthenticate = async (req, res, next) => {
             })
         }
 
-       
+        // Check session expiration
         if (tokenRecord.expiresAt < new Date()) {
             logAuthEvent('session_expired', decoded.userId, false, {
                 ipAddress: req.ip,
@@ -87,7 +98,7 @@ export const userAuthenticate = async (req, res, next) => {
             })
         }
 
-
+        // Validate user exists and is active
         const user = await User.findById(decoded.userId).lean()
         if (!user) {
             logAuthEvent('user_not_found', decoded.userId, false, {
@@ -116,8 +127,20 @@ export const userAuthenticate = async (req, res, next) => {
             })
         }
 
-        if (isHealthEndpoint) {
-            if (!user.healthDisclaimerAccepted) {
+        // Health endpoint validations - most health features just need disclaimer acceptance
+        const healthRelatedPaths = [
+            '/health-profile',
+            '/wellness-plan', 
+            '/wellness',
+            '/health-concern',
+            '/emergency-contact'
+        ]
+        
+        const isHealthRelated = healthRelatedPaths.some(endpoint => req.path.includes(endpoint))
+        
+        if (isHealthRelated) {
+            // Check if health disclaimer was accepted (except for disclaimer endpoint itself)
+            if (!user.healthDisclaimerAccepted && !req.path.includes('health-disclaimer')) {
                 logAuthEvent('health_disclaimer_not_accepted', decoded.userId, false, {
                     ipAddress: req.ip,
                     userAgent: req.get('User-Agent')
@@ -130,40 +153,35 @@ export const userAuthenticate = async (req, res, next) => {
                 })
             }
 
-          
+            // Check if user requires immediate consultation for advanced health features
             if (user.requiresImmediateConsultation && user.requiresImmediateConsultation()) {
-                logAuthEvent('high_risk_user_health_access', decoded.userId, false, {
-                    ipAddress: req.ip,
-                    userAgent: req.get('User-Agent'),
-                    additionalData: { riskLevel: user.riskLevel }
-                })
-                return res.status(403).json({
-                    success: false,
-                    message: 'Professional consultation required before accessing health features',
-                    error_type: 'professional_consultation_required',
-                    risk_level: user.riskLevel,
-                    safety_concerns: user.safetyFlags.filter(flag => !flag.resolved).map(flag => flag.flag)
-                })
+                const advancedHealthEndpoints = ['/wellness-plan', '/health-concern']
+                const isAdvancedEndpoint = advancedHealthEndpoints.some(endpoint => req.path.includes(endpoint))
+                
+                if (isAdvancedEndpoint) {
+                    logAuthEvent('high_risk_user_health_access', decoded.userId, false, {
+                        ipAddress: req.ip,
+                        userAgent: req.get('User-Agent'),
+                        additionalData: { riskLevel: user.riskLevel }
+                    })
+                    return res.status(403).json({
+                        success: false,
+                        message: 'Professional consultation required before accessing advanced health features',
+                        error_type: 'professional_consultation_required',
+                        risk_level: user.riskLevel,
+                        safety_concerns: user.safetyFlags?.filter(flag => !flag.resolved).map(flag => flag.flag) || []
+                    })
+                }
             }
 
-            if (tokenRecord.healthDataAccess) {
-                await Token.updateOne(
-                    { _id: tokenRecord._id },
-                    { 
-                        $set: { lastHealthAccess: new Date() },
-                        $inc: { healthAccessCount: 1 }
-                    }
-                )
-            }
-
-        
-            user.logHealthDataAccess()
+            // Update user's health data access tracking for health-related endpoints
             await User.updateOne(
                 { _id: user._id },
                 { $set: { 'healthDataAccess.lastAccessed': new Date() } }
             )
         }
 
+        // Attach user and session info to request
         req.user = user
         req.user.sessionId = tokenRecord.sessionId
         req.sessionInfo = {
@@ -173,13 +191,13 @@ export const userAuthenticate = async (req, res, next) => {
             permissions: tokenRecord.permissions || []
         }
 
-
+        // Update session last activity
         await Token.updateOne(
             { _id: tokenRecord._id },
             { $set: { updatedAt: new Date() } }
         )
 
-
+        // Log successful authentication
         logAuthEvent('authentication_success', decoded.userId, true, {
             ipAddress: req.ip,
             userAgent: req.get('User-Agent'),
@@ -211,7 +229,6 @@ export const userAuthenticate = async (req, res, next) => {
     }
 }
 
-
 export const requireHealthAccess = async (req, res, next) => {
     if (!req.sessionInfo?.healthDataAccess) {
         logAuthEvent('health_access_denied', req.user?._id, false, {
@@ -231,13 +248,11 @@ export const requireHealthAccess = async (req, res, next) => {
     next()
 }
 
-
 export const allowEmergencyAccess = async (req, res, next) => {
     const emergencyOverride = req.headers['x-emergency-override']
     const emergencyToken = req.headers['x-emergency-token']
     
     if (emergencyOverride && emergencyToken) {
-       
         logAuthEvent('emergency_access_attempt', req.user?._id || 'anonymous', true, {
             ipAddress: req.ip,
             userAgent: req.get('User-Agent'),
@@ -254,7 +269,7 @@ export const allowEmergencyAccess = async (req, res, next) => {
     next()
 }
 
-
+// Updated decodeJWT function to use the new security module
 export const decodeJWT = (token) => {
     try {
         return verifyJWTToken(token)

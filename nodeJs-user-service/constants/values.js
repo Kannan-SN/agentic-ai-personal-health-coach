@@ -1,40 +1,69 @@
-import config from '@/config'
-import ms from 'ms'
+// constants/values.js
+const config = require('@/config')
 
-// Authentication and session durations
-export const ACTIVATION_DURATION = ms('14d')
-export const REFRESH_EXPIRY_DURATION = ms(config.REFRESH_TOKEN_EXPIRATION)
-export const HEALTH_SESSION_DURATION = ms(config.HEALTH_SESSION_EXPIRATION)
-export const OTP_EXPIRY_DURATION = ms(config.OTP_EXPIRATION)
+// Time durations in milliseconds
+const ACTIVATION_DURATION = 24 * 60 * 60 * 1000 // 24 hours
+const REFRESH_EXPIRY_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
+const OTP_EXPIRY_DURATION = 5 * 60 * 1000 // 5 minutes
+const HEALTH_SESSION_DURATION = 60 * 60 * 1000 // 1 hour
 
-// Health-specific timeouts and limits
-export const HEALTH_DATA_SESSION_TIMEOUT = ms('1h') 
-export const EMERGENCY_RESPONSE_TIMEOUT = ms('5m') 
-export const PROFESSIONAL_CONSULTATION_REMINDER = ms('30d') 
-export const RISK_ASSESSMENT_INTERVAL = ms('90d') 
+// Rate limiting
+const MAX_LOGIN_ATTEMPTS = 5
+const LOGIN_ATTEMPT_WINDOW = 15 * 60 * 1000 // 15 minutes
+const MAX_OTP_ATTEMPTS = 3
+const OTP_ATTEMPT_WINDOW = 10 * 60 * 1000 // 10 minutes
 
-// Safety monitoring intervals
-export const PROGRESS_TRACKING_REMINDER = ms('7d') 
-export const HEALTH_PLAN_REVIEW_INTERVAL = ms('14d') 
-export const EMERGENCY_CONTACT_VERIFICATION = ms('180d') 
+// Health service limits
+const MAX_DAILY_HEALTH_REQUESTS = config.MAX_DAILY_HEALTH_REQUESTS
+const SAFETY_ESCALATION_THRESHOLD = config.SAFETY_ESCALATION_THRESHOLD
 
-// File upload limits (enhanced for health documents)
-export const MAX_HEALTH_DOCUMENT_UPLOAD_SIZE = 10 * 1024 * 1024 
-export const MAX_PROGRESS_PHOTO_SIZE = 5 * 1024 * 1024 
-export const MAX_MEDICAL_REPORT_SIZE = 15 * 1024 * 1024 
+// File size limits
+const MAX_HEALTH_DOCUMENT_SIZE = config.MAX_HEALTH_DOCUMENT_SIZE
+const MAX_PROGRESS_PHOTO_SIZE = config.MAX_PROGRESS_PHOTO_SIZE
+const MAX_MEDICAL_REPORT_SIZE = config.MAX_MEDICAL_REPORT_SIZE
 
-// Rate limiting values
-export const MAX_HEALTH_REQUESTS_PER_HOUR = 50
-export const MAX_EMERGENCY_ALERTS_PER_DAY = 5
-export const MAX_PLAN_MODIFICATIONS_PER_WEEK = 10
+// Data retention
+const HEALTH_DATA_RETENTION_DAYS = config.HEALTH_DATA_RETENTION_DAYS
+const AUDIT_LOG_RETENTION_DAYS = config.AUDIT_LOG_RETENTION_DAYS
 
-// Audit and compliance retention
-export const HEALTH_AUDIT_LOG_RETENTION = ms('7y') 
-export const GENERAL_AUDIT_LOG_RETENTION = ms('3y') 
-export const SESSION_LOG_RETENTION = ms('1y') 
+// Security
+const PASSWORD_MIN_LENGTH = 8
+const PASSWORD_MAX_LENGTH = 128
+const USERNAME_MIN_LENGTH = 3
+const USERNAME_MAX_LENGTH = 50
 
-// Safety thresholds
-export const HIGH_RISK_SYMPTOM_THRESHOLD = 3 
-export const EMERGENCY_RESPONSE_ESCALATION_TIME = ms('15m') 
-export const PROFESSIONAL_CONSULTATION_OVERDUE = ms('60d') 
+// Health service constants
+const HEALTH_DISCLAIMER_VERSION = config.HEALTH_DISCLAIMER_VERSION
+const EMERGENCY_NOTIFICATION_EMAIL = config.EMERGENCY_NOTIFICATION_EMAIL
 
+// JWT Configuration
+const ACCESS_TOKEN_EXPIRATION = config.ACCESS_TOKEN_EXPIRATION
+const REFRESH_TOKEN_EXPIRATION = config.REFRESH_TOKEN_EXPIRATION
+const HEALTH_SESSION_EXPIRATION = config.HEALTH_SESSION_EXPIRATION
+
+module.exports = {
+    ACTIVATION_DURATION,
+    REFRESH_EXPIRY_DURATION,
+    OTP_EXPIRY_DURATION,
+    HEALTH_SESSION_DURATION,
+    MAX_LOGIN_ATTEMPTS,
+    LOGIN_ATTEMPT_WINDOW,
+    MAX_OTP_ATTEMPTS,
+    OTP_ATTEMPT_WINDOW,
+    MAX_DAILY_HEALTH_REQUESTS,
+    SAFETY_ESCALATION_THRESHOLD,
+    MAX_HEALTH_DOCUMENT_SIZE,
+    MAX_PROGRESS_PHOTO_SIZE,
+    MAX_MEDICAL_REPORT_SIZE,
+    HEALTH_DATA_RETENTION_DAYS,
+    AUDIT_LOG_RETENTION_DAYS,
+    PASSWORD_MIN_LENGTH,
+    PASSWORD_MAX_LENGTH,
+    USERNAME_MIN_LENGTH,
+    USERNAME_MAX_LENGTH,
+    HEALTH_DISCLAIMER_VERSION,
+    EMERGENCY_NOTIFICATION_EMAIL,
+    ACCESS_TOKEN_EXPIRATION,
+    REFRESH_TOKEN_EXPIRATION,
+    HEALTH_SESSION_EXPIRATION
+}

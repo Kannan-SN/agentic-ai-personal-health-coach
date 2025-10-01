@@ -1,8 +1,10 @@
-import User from './User'
+
+// models/index.js
+import User from './User.js'
+import Token from './Token.js'
+import Security from './Security.js'
 import HealthProfile from './HealthProfile'
 import WellnessPlan from './WellnessPlan'
-import Security from './Security'
-import Token from './Token'
 import EmergencyAlert from './EmergencyAlert'
 import ProgressTracking from './ProgressTracking'
 
@@ -12,6 +14,16 @@ export {
     WellnessPlan, 
     Security, 
     Token, 
+    EmergencyAlert,
+    ProgressTracking
+}
+
+export default { 
+    User, 
+    HealthProfile,
+    WellnessPlan,
+    Security, 
+    Token,
     EmergencyAlert,
     ProgressTracking
 }

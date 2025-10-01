@@ -10,11 +10,16 @@ const createAgentSignature = (data, mode = 'body') => {
 }
 
 export const createHealthPlan = async (healthPlanData) => {
+    const startTime = Date.now()
+    
     try {
+        console.log('[AGENT-SERVICE] ===== CALLING AGENT SERVICE =====')
+        console.log('[AGENT-SERVICE] URL:', config.AGENT_HOST)
+        console.log('[AGENT-SERVICE] Endpoint: /api/internal/create-health-plan')
+        console.log('[AGENT-SERVICE] Request Data:', JSON.stringify(healthPlanData, null, 2))
+        
         const { signature, timestamp } = createAgentSignature(healthPlanData, 'body')
 
-        console.log('[WELLNESS-AGENT] Sending health plan request to Agent Service')
-        
         const response = await axios({
             method: 'POST',
             url: `${config.AGENT_HOST}/api/internal/create-health-plan`,
@@ -27,49 +32,92 @@ export const createHealthPlan = async (healthPlanData) => {
                 'WELLNESS-ORIGIN': 'user',
                 'WELLNESS-HEALTH-DATA': 'true'
             },
-            timeout: config.REQUEST_TIMEOUT
+            // timeout: 90000, // 90 seconds
+            validateStatus: (status) => status < 600 // Don't throw on any status < 600
         })
 
-        console.log('[WELLNESS-AGENT] Received response from Agent Service:', response.status)
+        const duration = Date.now() - startTime
+        console.log('[AGENT-SERVICE] Response received in', duration, 'ms')
+        console.log('[AGENT-SERVICE] Status:', response.status)
+        console.log('[AGENT-SERVICE] Response Data:', JSON.stringify(response.data, null, 2))
 
+        // Handle 202 - Professional consultation required
+        if (response.status === 202) {
+            console.log('[AGENT-SERVICE] Professional consultation recommended')
+            return {
+                success: false,
+                require_professional_consultation: true,
+                consultation_plan: response.data.consultation_plan,
+                message: response.data.message || 'Professional consultation recommended',
+                ...response.data
+            }
+        }
+
+        // Handle 201 or 200 - Success
         if (response.status === 200 || response.status === 201) {
+            console.log('[AGENT-SERVICE] ===== AGENT SERVICE SUCCESS =====')
             return {
                 success: true,
                 ...response.data
             }
-        } else {
-            console.error('[WELLNESS-AGENT] Agent Service returned non-success status:', response.status)
-            return { 
-                success: false, 
-                message: 'Agent Service request failed',
+        }
+
+        // Handle 400-499 errors
+        if (response.status >= 400 && response.status < 500) {
+            console.error('[AGENT-SERVICE] Client error:', response.status)
+            return {
+                success: false,
+                message: response.data?.message || 'Invalid request to agent service',
+                error: response.data,
                 status: response.status
             }
         }
 
+        // Handle 500+ errors
+        console.error('[AGENT-SERVICE] Server error:', response.status)
+        return {
+            success: false,
+            message: response.data?.message || 'Agent service error',
+            error: response.data,
+            status: response.status
+        }
+
     } catch (error) {
-        console.error('[WELLNESS-AGENT] Error calling Agent Service:', error.message)
+        const duration = Date.now() - startTime
+        console.error('[AGENT-SERVICE] ===== AGENT SERVICE ERROR =====')
+        console.error('[AGENT-SERVICE] Failed after', duration, 'ms')
+        console.error('[AGENT-SERVICE] Error:', error.message)
         
         if (error.response) {
-            console.error('[WELLNESS-AGENT] Agent Service error response:', error.response.data)
+            console.error('[AGENT-SERVICE] Error Status:', error.response.status)
+            console.error('[AGENT-SERVICE] Error Data:', JSON.stringify(error.response.data, null, 2))
+            
+            // Handle error response gracefully
             return {
                 success: false,
-                message: error.response.data?.message || 'Agent Service error',
+                message: error.response.data?.message || 'Agent service error',
+                error: error.response.data,
                 status: error.response.status,
-                agent_error: error.response.data
             }
         } else if (error.request) {
-            console.error('[WELLNESS-AGENT] No response from Agent Service')
+            console.error('[AGENT-SERVICE] No response received from agent service')
+            console.error('[AGENT-SERVICE] Is agent service running at:', config.AGENT_HOST)
+            
             return {
                 success: false,
-                message: 'Agent Service unavailable. Please try again later.',
+                message: 'Unable to reach agent service. Please ensure it is running and accessible.',
+                error: 'NO_RESPONSE',
                 error_type: 'service_unavailable'
             }
         } else {
-            console.error('[WELLNESS-AGENT] Request setup error:', error.message)
+            console.error('[AGENT-SERVICE] Error setting up request:', error.message)
+            console.error('[AGENT-SERVICE] Stack:', error.stack)
+            
             return {
                 success: false,
-                message: 'Failed to create request to Agent Service',
-                error_type: 'request_error'
+                message: 'Failed to communicate with agent service',
+                error: error.message,
+                error_type: 'request_setup_error'
             }
         }
     }
@@ -77,6 +125,7 @@ export const createHealthPlan = async (healthPlanData) => {
 
 export const updateHealthPlanProgress = async (planId, progressData) => {
     try {
+        console.log('[AGENT-SERVICE] Updating health plan progress:', planId)
         const { signature, timestamp } = createAgentSignature(progressData, 'body')
 
         const response = await axios({
@@ -91,7 +140,7 @@ export const updateHealthPlanProgress = async (planId, progressData) => {
                 'WELLNESS-ORIGIN': 'user',
                 'WELLNESS-HEALTH-DATA': 'true'
             },
-            timeout: config.REQUEST_TIMEOUT
+            timeout: 30000
         })
 
         if (response.status === 200) {
@@ -108,7 +157,7 @@ export const updateHealthPlanProgress = async (planId, progressData) => {
         }
 
     } catch (error) {
-        console.error('[WELLNESS-AGENT] Progress update error:', error.message)
+        console.error('[AGENT-SERVICE] Progress update error:', error.message)
         return {
             success: false,
             message: 'Unable to sync progress with Agent Service',
@@ -133,7 +182,7 @@ export const chatWithHealthPlan = async (planId, chatData) => {
                 'WELLNESS-ORIGIN': 'user',
                 'WELLNESS-HEALTH-DATA': 'true'
             },
-            timeout: config.REQUEST_TIMEOUT
+            timeout: 30000
         })
 
         if (response.status === 200) {
@@ -149,7 +198,7 @@ export const chatWithHealthPlan = async (planId, chatData) => {
         }
 
     } catch (error) {
-        console.error('[WELLNESS-AGENT] Chat error:', error.message)
+        console.error('[AGENT-SERVICE] Chat error:', error.message)
         return {
             success: false,
             message: 'Unable to process chat request',
@@ -174,7 +223,7 @@ export const validateHealthPlanModifications = async (modificationData) => {
                 'WELLNESS-ORIGIN': 'user',
                 'WELLNESS-HEALTH-DATA': 'true'
             },
-            timeout: config.REQUEST_TIMEOUT
+            timeout: 30000
         })
 
         if (response.status === 200) {
@@ -190,7 +239,7 @@ export const validateHealthPlanModifications = async (modificationData) => {
         }
 
     } catch (error) {
-        console.error('[WELLNESS-AGENT] Validation error:', error.message)
+        console.error('[AGENT-SERVICE] Validation error:', error.message)
         return {
             success: false,
             message: 'Unable to validate modifications',
@@ -222,7 +271,7 @@ export const sendEmergencyAlert = async (alertData) => {
             timeout: 10000 
         })
 
-        console.log('[WELLNESS-AGENT] Emergency alert sent to Agent Service')
+        console.log('[AGENT-SERVICE] Emergency alert sent to Agent Service')
 
         if (response.status === 200) {
             return {
@@ -237,7 +286,7 @@ export const sendEmergencyAlert = async (alertData) => {
         }
 
     } catch (error) {
-        console.error('[WELLNESS-AGENT] Emergency alert error:', error.message)
+        console.error('[AGENT-SERVICE] Emergency alert error:', error.message)
         return {
             success: false,
             message: 'Emergency alert service unavailable',

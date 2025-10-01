@@ -2,8 +2,6 @@ import * as yup from 'yup'
 import * as regex from '@/constants/regex'
 import yupToFormError from '@/utils/yupToFormErrors'
 
-
-
 const passwordSchema = yup.string()
     .required('Password is required')
     .min(8, 'Password must be at least 8 characters')
@@ -39,15 +37,10 @@ export const signup = async (req, res, next) => {
                 .matches(/^[a-zA-Z\s\-']*$/, 'Middle name can only contain letters, spaces, hyphens, and apostrophes')
                 .trim(),
             email: emailSchema,
-            agreeToTerms: yup.boolean()
-                .required('You must agree to the terms of service')
-                .oneOf([true], 'You must agree to the terms of service'),
-            privacyPolicyAccepted: yup.boolean()
-                .required('You must accept the privacy policy')
-                .oneOf([true], 'You must accept the privacy policy'),
-            ageConfirmation: yup.boolean()
-                .required('Age confirmation is required')
-                .oneOf([true], 'You must confirm you are at least 13 years old')
+            password: passwordSchema,
+            confirmPassword: yup.string()
+                .required('Password confirmation is required')
+                .oneOf([yup.ref('password')], 'Passwords must match'),
         })
 
         await schema.validate(req.body, { abortEarly: false })
@@ -62,7 +55,6 @@ export const signup = async (req, res, next) => {
         })
     }
 }
-
 
 export const signin = async (req, res, next) => {
     try {
@@ -85,7 +77,7 @@ export const signin = async (req, res, next) => {
     }
 }
 
-
+// Keep this for any remaining password reset functionality
 export const createPassword = async (req, res, next) => {
     try {
         const schema = yup.object().shape({
@@ -93,9 +85,6 @@ export const createPassword = async (req, res, next) => {
             confirmPassword: yup.string()
                 .required('Password confirmation is required')
                 .oneOf([yup.ref('password')], 'Passwords must match'),
-            healthDisclaimerRead: yup.boolean()
-                .required('Health disclaimer acknowledgment is required')
-                .oneOf([true], 'You must read and acknowledge the health disclaimer')
         })
 
         await schema.validate(req.body, { abortEarly: false })

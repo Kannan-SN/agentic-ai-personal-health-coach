@@ -36,10 +36,41 @@ app.use(helmet({
     }
 }))
 
+// MOVE CORS CONFIGURATION BEFORE RATE LIMITERS
+console.log('config.FRONTEND_HOST: ', config.FRONTEND_HOST);
+console.log('config.AGENT_HOST: ', config.AGENT_HOST);
 
+app.use(
+  cors({
+    origin: [config.FRONTEND_HOST, config.AGENT_HOST],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'X-Health-Data-Consent',
+      'X-Medical-Clearance',
+      'Device-Type',   // ✅ added
+      'Timezone',      // ✅ added
+      'TIMESTAMP',     // ✅ added
+    ],
+    exposedHeaders: [
+      'X-Health-Data-Warning',
+      'X-Professional-Consultation-Recommended',
+      'X-Safety-Level',
+      'X-Emergency-Protocols',
+    ],
+  })
+);
+
+
+// UPDATE RATE LIMITERS TO SKIP PREFLIGHT REQUESTS
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
-    max: 100, 
+    max: 100,
     message: {
         success: false,
         message: 'Too many requests from this IP, please try again later.',
@@ -47,6 +78,7 @@ const generalLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => req.method === 'OPTIONS', // Skip preflight requests
 })
 
 const healthDataLimiter = rateLimit({
@@ -56,32 +88,14 @@ const healthDataLimiter = rateLimit({
         success: false,
         message: 'Health data request limit exceeded. Please wait before making additional requests.',
         type: 'health_data_rate_limit'
-    }
+    },
+    skip: (req) => req.method === 'OPTIONS', // Skip preflight requests
 })
 
+// NOW APPLY RATE LIMITERS AFTER CORS
 app.use('/api/user/health', healthDataLimiter)
 app.use('/api/user/wellness', healthDataLimiter)
 app.use(generalLimiter)
-
-console.log('config.FRONTEND_HOST: ', config.FRONTEND_HOST);
-console.log('config.AGENT_HOST: ', config.AGENT_HOST);
-
-app.use(
-    cors({
-        
-        origin: [ config.FRONTEND_HOST,config.AGENT_HOST], // Use specific origin instead of '*'
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-        allowedHeaders: [
-            'Origin', 'X-Requested-With', 'Content-Type', 'Accept', 
-            'Authorization', 'X-Health-Data-Consent', 'X-Medical-Clearance'
-        ],
-        exposedHeaders: [
-            'X-Health-Data-Warning', 'X-Professional-Consultation-Recommended',
-            'X-Safety-Level', 'X-Emergency-Protocols'
-        ]
-    }),
-)
 
 app.use(json({ limit: '16kb' }))
 app.use(urlencoded({ extended: true }))
@@ -98,7 +112,6 @@ app.use((req, res, next) => {
         console.log(`[HEALTH-ACCESS] ${new Date().toISOString()} - ${req.method} ${req.url} from ${clientIP}`)
     }
     
-   
     res.set({
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'DENY',
@@ -132,7 +145,6 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api', router)
-
 
 app.use((error, req, res, next) => {
     console.error(`[WELLNESS-ERROR] ${new Date().toISOString()}:`, error)

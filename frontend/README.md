@@ -1,73 +1,91 @@
-# React + TypeScript + Vite
+# Wellness coach Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The **frontend** is the user-facing web application of the Wellness coach. It provides an intuitive, responsive interface for users to explore AI-powered career insights and manage their profiles. This app is built with modern web technologies and is designed for seamless integration with the Wellness coach backend services.
 
-Currently, two official plugins are available:
+***
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- Clean, interactive UI for career path exploration
+- Seamless API integration with CareerGen services
+- Configurable via environment variables (`local.env`)
+- Local development with fast refresh and debugging support
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+***
 
-## Expanding the ESLint configuration
+## Environment Variables (`local.env`)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Create a file named `local.env` in the `frontend` directory with the following contents:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_MODE=development
+VITE_USER_URL=http://localhost:5001/api
+VITE_AGENT_URL=http://localhost:5000/api
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+> **Note:**
+> Set `VITE_USER_URL` and `VITE_AGENT_URL` to the URLs of your respective backend services.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+***
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Running the Frontend Locally (Without Docker)
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/Kannan-SN/agentic-ai-personal-health-coach.git
 ```
+
+2. **Navigate to the frontend directory**
+
+```bash
+cd frontend
+```
+
+3. **Create and configure the environment file**
+
+```bash
+touch local.env
+# Paste the env template above and set your values.
+```
+
+4. **Ensure Node.js v22 is installed**
+5. **Install dependencies**
+
+```bash
+npm i
+```
+
+6. **Start the development server**
+
+```bash
+npm run dev
+```
+
+7. The app should now be accessible, typically at [http://localhost:5173](http://localhost:5173) unless otherwise specified in your output.
+
+***
+
+## Project Structure
+
+```
+agentic-ai-personal-health-coach/
+│
+└── frontend/
+    ├── src/
+    ├── public/
+    ├── ... (other frontend files)
+    └── local.env
+```
+
+
+***
+
+## Contributing
+
+- Pull requests and feature suggestions are welcome!
+- Fork the repository and open a PR.
+
+***
+
+\

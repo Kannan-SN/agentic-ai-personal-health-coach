@@ -38,6 +38,7 @@ const WellnessPlan = () => {
   const [showCreateForm, setShowCreateForm] = useState(false)
   
   const { plans, activePlan } = useSelector(state => state.wellness)
+  console.log('plans: ', plans);
   const { healthProfile } = useSelector(state => state.user)
 
   useEffect(() => {

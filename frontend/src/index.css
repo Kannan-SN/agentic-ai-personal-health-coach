@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+@layer base {
+  body {
+    @apply font-sans; /* 👈 applies your default sans font (Poppins here) */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f8fafc;
+    color: #1f2937;
+  }
+}
+
+
 /* CSS Custom Properties for shadcn/ui */
 @layer base {
   :root {
